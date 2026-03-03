@@ -225,7 +225,7 @@ function BoxPerformanceChart({ data }) {
 // ─── Main Page ──────────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
   const { analytics } = useLoaderData();
-  const { totalOrders, totalRevenue, avgBundleValue, topProducts, dailyTrend, boxPerformance } = analytics;
+  const { totalOrders, totalRevenue, avgBundleValue, activeBoxCount, topProducts, dailyTrend, boxPerformance } = analytics;
 
   const stats = [
     {
@@ -248,7 +248,7 @@ export default function AnalyticsPage() {
     },
     {
       label: "Box Types Active",
-      value: boxPerformance.length,
+      value: activeBoxCount,
       icon: "🗂️",
       color: "#b45309",
     },

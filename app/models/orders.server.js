@@ -1,5 +1,29 @@
 import db from "../db.server";
 
+function toDateKey(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function buildDailySkeleton(fromDate, toDate) {
+  const days = [];
+  const cursor = new Date(fromDate);
+  cursor.setHours(0, 0, 0, 0);
+
+  const end = new Date(toDate);
+  end.setHours(0, 0, 0, 0);
+
+  while (cursor <= end) {
+    days.push({
+      date: toDateKey(cursor),
+      revenue: 0,
+      orders: 0,
+    });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return days;
+}
+
 export async function trackBundleOrder(shop, orderData) {
   const { orderId, boxId, selectedProducts, bundlePrice, giftMessage, orderDate, customerId } = orderData;
 
@@ -57,14 +81,21 @@ export async function getAnalytics(shop, from, to) {
   const fromDate = from ? new Date(from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const toDate = to ? new Date(to) : new Date();
 
-  const orders = await db.bundleOrder.findMany({
-    where: {
-      shop,
-      orderDate: { gte: fromDate, lte: toDate },
-    },
-    include: { box: { select: { displayTitle: true, itemCount: true } } },
-    orderBy: { orderDate: "asc" },
-  });
+  const [orders, activeBoxes] = await Promise.all([
+    db.bundleOrder.findMany({
+      where: {
+        shop,
+        orderDate: { gte: fromDate, lte: toDate },
+      },
+      include: { box: { select: { displayTitle: true, itemCount: true } } },
+      orderBy: { orderDate: "asc" },
+    }),
+    db.comboBox.findMany({
+      where: { shop, isActive: true, deletedAt: null },
+      select: { id: true, displayTitle: true },
+      orderBy: { sortOrder: "asc" },
+    }),
+  ]);
 
   const totalOrders = orders.length;
   const totalRevenue = orders.reduce(
@@ -72,6 +103,7 @@ export async function getAnalytics(shop, from, to) {
     0,
   );
   const avgBundleValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+  const activeBoxCount = activeBoxes.length;
 
   // Top products (from selectedProducts JSON arrays)
   const productCounts = {};
@@ -88,20 +120,29 @@ export async function getAnalytics(shop, from, to) {
     .slice(0, 10)
     .map(([productId, count]) => ({ productId, count }));
 
-  // Daily trend
-  const dailyMap = {};
+  // Daily trend (always include every day in range, even if zero orders).
+  const dailyTrend = buildDailySkeleton(fromDate, toDate);
+  const dailyMap = Object.fromEntries(dailyTrend.map((d) => [d.date, d]));
   for (const order of orders) {
-    const day = order.orderDate.toISOString().slice(0, 10);
-    if (!dailyMap[day]) dailyMap[day] = { date: day, revenue: 0, orders: 0 };
+    const day = toDateKey(order.orderDate);
+    if (!dailyMap[day]) continue;
     dailyMap[day].revenue += parseFloat(order.bundlePrice);
     dailyMap[day].orders += 1;
   }
-  const dailyTrend = Object.values(dailyMap).sort((a, b) =>
-    a.date.localeCompare(b.date),
-  );
 
   // Box type performance
-  const boxPerf = {};
+  const boxPerf = Object.fromEntries(
+    activeBoxes.map((box) => [
+      box.id,
+      {
+        boxId: box.id,
+        boxTitle: box.displayTitle || "Untitled Box",
+        revenue: 0,
+        orders: 0,
+      },
+    ]),
+  );
+
   for (const order of orders) {
     const key = order.boxId;
     if (!boxPerf[key]) {
@@ -123,6 +164,7 @@ export async function getAnalytics(shop, from, to) {
     totalOrders,
     totalRevenue: parseFloat(totalRevenue.toFixed(2)),
     avgBundleValue: parseFloat(avgBundleValue.toFixed(2)),
+    activeBoxCount,
     topProducts,
     dailyTrend,
     boxPerformance,
