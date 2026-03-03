@@ -44,7 +44,7 @@
       return;
     }
 
-    fetchBoxes(shop, apiBase, function (err, boxes) {
+    fetchBoxes(shop, apiBase, function (err, boxes, settings) {
       if (err || !boxes || boxes.length === 0) {
         root.innerHTML = '';
         return;
@@ -60,7 +60,9 @@
         return;
       }
 
-      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, heading: heading, apiBase: apiBase });
+      // Settings can override heading if not explicitly set via data attribute
+      var resolvedHeading = root.dataset.heading || config.heading || (settings && settings.widgetHeadingText) || 'Build Your Own Box!';
+      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, heading: resolvedHeading, apiBase: apiBase, settings: settings || {} });
     });
   }
 
@@ -95,10 +97,19 @@
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       })
-      .then(function (data) { cb(null, data); })
+      .then(function (data) {
+        // Support both legacy array response and new { boxes, settings } format
+        if (data && Array.isArray(data.boxes)) {
+          cb(null, data.boxes, data.settings || {});
+        } else if (Array.isArray(data)) {
+          cb(null, data, {});
+        } else {
+          cb(null, [], {});
+        }
+      })
       .catch(function (e) {
         console.error('[ComboBuilder] Failed to fetch boxes:', e);
-        cb(e, null);
+        cb(e, null, {});
       });
   }
 
@@ -193,7 +204,7 @@
     var btn = document.createElement('button');
     btn.className = 'cb-box-cta-btn';
     btn.type = 'button';
-    btn.textContent = 'BUILD YOUR OWN BOX';
+    btn.textContent = (ctx.settings && ctx.settings.ctaButtonLabel) || 'BUILD YOUR OWN BOX';
     body.appendChild(btn);
 
     card.appendChild(body);
@@ -332,17 +343,19 @@
     slotSection.appendChild(slotRow);
     container.appendChild(slotSection);
 
-    // ── Gift Message ──
+    // ── Gift Message ── (hidden until all slots are filled)
     var giftInput = null;
+    var giftSection = null;
     if (box.giftMessageEnabled) {
-      var giftSection = document.createElement('div');
+      giftSection = document.createElement('div');
       giftSection.className = 'cb-gift-section';
+      giftSection.style.display = 'none';
       var giftLabel = document.createElement('label');
       giftLabel.className = 'cb-gift-label';
       giftLabel.textContent = 'Gift Message (optional)';
       giftInput = document.createElement('textarea');
       giftInput.className = 'cb-gift-input';
-      giftInput.placeholder = 'Add a personal message...';
+      giftInput.placeholder = 'Write a personal message for your gift recipient...';
       giftInput.rows = 2;
       giftSection.appendChild(giftLabel);
       giftSection.appendChild(giftInput);
@@ -465,6 +478,7 @@
     function updateCartButton() {
       var filled = slots.filter(Boolean).length;
       var remaining = box.itemCount - filled;
+      var addToCartLabel = (ctx.settings && ctx.settings.addToCartLabel) || 'ADD TO CART';
 
       if (remaining > 0) {
         cartBtn.disabled = true;
@@ -472,19 +486,33 @@
         cartBtn.textContent = remaining + ' more item' + (remaining !== 1 ? 's' : '') + ' needed';
         progressText.textContent = filled + ' / ' + box.itemCount + ' selected';
         cartBtn.setAttribute('title', 'Please select all items to continue');
+        // Hide gift message section when not all slots filled
+        if (giftSection) giftSection.style.display = 'none';
       } else {
         cartBtn.disabled = false;
         cartBtn.classList.add('cb-cart-btn--ready');
-        cartBtn.textContent = 'ADD TO CART — ' + formatPrice(box.bundlePrice, ctx.currencySymbol);
+        cartBtn.textContent = addToCartLabel + ' — ' + formatPrice(box.bundlePrice, ctx.currencySymbol);
         progressText.textContent = 'All ' + box.itemCount + ' items selected!';
         cartBtn.removeAttribute('title');
+        // Reveal gift message section when all slots filled
+        if (giftSection) giftSection.style.display = 'block';
       }
     }
 
     updateCartButton();
 
     cartBtn.addEventListener('click', function () {
-      if (slots.filter(Boolean).length < box.itemCount) return;
+      if (slots.filter(Boolean).length < box.itemCount) {
+        // Flash empty slots red to signal which ones need filling
+        var slotEls = slotRow.querySelectorAll('.cb-slot');
+        slots.forEach(function (slotProduct, idx) {
+          if (!slotProduct && slotEls[idx]) {
+            slotEls[idx].classList.add('cb-slot--error');
+            setTimeout(function () { slotEls[idx].classList.remove('cb-slot--error'); }, 600);
+          }
+        });
+        return;
+      }
       addToCart(box, slots, sessionId, giftInput ? giftInput.value : null, ctx, cartBtn);
     });
 
@@ -595,11 +623,13 @@
   // ─── Bootstrap ────────────────────────────────────────────────────────────────
 
   function bootstrap() {
+    var widgetCount = 0;
+
     // 1. Process __COMBO_BUILDER__ queue (app block approach)
     var queue = window.__COMBO_BUILDER__;
     if (Array.isArray(queue)) {
       queue.forEach(function (config) {
-        try { initWidget(config); } catch (e) { console.error('[ComboBuilder]', e); }
+        try { initWidget(config); widgetCount++; } catch (e) { console.error('[ComboBuilder]', e); }
       });
     }
 
@@ -614,14 +644,20 @@
     //    <div id="combo-builder-widget" data-page="all" data-box-ids="1,3">
     var legacyEl = document.getElementById('combo-builder-widget');
     if (legacyEl) {
-      try { initLegacyWidget(legacyEl); } catch (e) { console.error('[ComboBuilder]', e); }
+      try { initLegacyWidget(legacyEl); widgetCount++; } catch (e) { console.error('[ComboBuilder]', e); }
     }
 
     // Also pick up any numbered legacy widgets: combo-builder-widget-1, -2, etc.
     var legacyEls = document.querySelectorAll('[id^="combo-builder-widget-legacy"]');
     for (var i = 0; i < legacyEls.length; i++) {
-      try { initLegacyWidget(legacyEls[i]); } catch (e) { console.error('[ComboBuilder]', e); }
+      try { initLegacyWidget(legacyEls[i]); widgetCount++; } catch (e) { console.error('[ComboBuilder]', e); }
     }
+
+    // Dispatch ready event so themes/other scripts can react
+    document.dispatchEvent(new CustomEvent('comboBuildReady', {
+      bubbles: true,
+      detail: { widgetCount: widgetCount },
+    }));
   }
 
   if (document.readyState === 'loading') {

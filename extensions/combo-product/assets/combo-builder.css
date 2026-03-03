@@ -270,6 +270,18 @@
   box-shadow: var(--cb-shadow);
 }
 
+.cb-slot--error {
+  border: 2px solid #ef4444;
+  background: #fef2f2;
+  animation: cb-slot-error-flash 0.6s ease forwards;
+}
+
+@keyframes cb-slot-error-flash {
+  0%   { border-color: #ef4444; background: #fef2f2; }
+  50%  { border-color: #dc2626; background: #fee2e2; }
+  100% { border-color: #ef4444; background: #fef2f2; }
+}
+
 .cb-slot-active-label {
   font-size: 10px;
   font-weight: 600;

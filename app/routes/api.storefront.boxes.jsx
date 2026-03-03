@@ -1,4 +1,5 @@
 import { listBoxes } from "../models/boxes.server";
+import { getSettings } from "../models/settings.server";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -18,7 +19,10 @@ export const loader = async ({ request }) => {
     return Response.json({ error: "shop parameter required" }, { status: 400, headers: CORS_HEADERS });
   }
 
-  const boxes = await listBoxes(shop, true);
+  const [boxes, settings] = await Promise.all([
+    listBoxes(shop, true),
+    getSettings(shop),
+  ]);
 
   const publicBoxes = boxes.map((box) => ({
     id: box.id,
@@ -34,5 +38,15 @@ export const loader = async ({ request }) => {
     sortOrder: box.sortOrder,
   }));
 
-  return Response.json(publicBoxes, { headers: CORS_HEADERS });
+  const publicSettings = {
+    widgetHeadingText: settings.widgetHeadingText || null,
+    ctaButtonLabel: settings.ctaButtonLabel || null,
+    addToCartLabel: settings.addToCartLabel || null,
+    buttonColor: settings.buttonColor || "#2A7A4F",
+    activeSlotColor: settings.activeSlotColor || "#2A7A4F",
+    showSavingsBadge: settings.showSavingsBadge,
+    showProductPrices: settings.showProductPrices,
+  };
+
+  return Response.json({ boxes: publicBoxes, settings: publicSettings }, { headers: CORS_HEADERS });
 };

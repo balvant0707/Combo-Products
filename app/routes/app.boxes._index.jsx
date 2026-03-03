@@ -145,7 +145,7 @@ export default function ManageBoxesPage() {
             >
               <thead>
                 <tr style={{ background: "#f7f8fc" }}>
-                  {["", "Box Name", "Items", "Price", "Gift Box", "Status", "Actions"].map(
+                  {["", "Box Name", "Items", "Price", "Gift Box", "Orders", "Status", "Actions"].map(
                     (h) => (
                       <th
                         key={h}
@@ -203,6 +203,9 @@ export default function ManageBoxesPage() {
                     </td>
                     <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4", color: box.isGiftBox ? "#059669" : "#9ca3af" }}>
                       {box.isGiftBox ? "Yes" : "No"}
+                    </td>
+                    <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4", color: "#374151", fontFamily: "monospace" }}>
+                      {box.orderCount}
                     </td>
                     <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4" }}>
                       <span

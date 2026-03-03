@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLoaderData, useActionData, Form, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -37,6 +38,8 @@ export default function SettingsPage() {
   const actionData = useActionData();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
+  const [buttonColor, setButtonColor] = useState(settings.buttonColor || "#2A7A4F");
+  const [activeSlotColor, setActiveSlotColor] = useState(settings.activeSlotColor || "#2A7A4F");
 
   return (
     <s-page heading="Settings">
@@ -132,13 +135,14 @@ export default function SettingsPage() {
                   <input
                     type="color"
                     name="buttonColor"
-                    defaultValue={settings.buttonColor || "#2A7A4F"}
+                    value={buttonColor}
+                    onChange={(e) => setButtonColor(e.target.value)}
                     style={{ width: "40px", height: "36px", border: "1px solid #c9c6be", borderRadius: "6px", cursor: "pointer", padding: "2px" }}
                   />
                   <input
                     type="text"
-                    id="buttonColorText"
-                    defaultValue={settings.buttonColor || "#2A7A4F"}
+                    value={buttonColor}
+                    onChange={(e) => setButtonColor(e.target.value)}
                     style={{
                       flex: 1,
                       padding: "8px 12px",
@@ -149,7 +153,6 @@ export default function SettingsPage() {
                       background: "#fff",
                       fontFamily: "monospace",
                     }}
-                    readOnly
                   />
                 </div>
               </div>
@@ -161,13 +164,14 @@ export default function SettingsPage() {
                   <input
                     type="color"
                     name="activeSlotColor"
-                    defaultValue={settings.activeSlotColor || "#2A7A4F"}
+                    value={activeSlotColor}
+                    onChange={(e) => setActiveSlotColor(e.target.value)}
                     style={{ width: "40px", height: "36px", border: "1px solid #c9c6be", borderRadius: "6px", cursor: "pointer", padding: "2px" }}
                   />
                   <input
                     type="text"
-                    id="activeSlotColorText"
-                    defaultValue={settings.activeSlotColor || "#2A7A4F"}
+                    value={activeSlotColor}
+                    onChange={(e) => setActiveSlotColor(e.target.value)}
                     style={{
                       flex: 1,
                       padding: "8px 12px",
@@ -178,7 +182,6 @@ export default function SettingsPage() {
                       background: "#fff",
                       fontFamily: "monospace",
                     }}
-                    readOnly
                   />
                 </div>
               </div>
