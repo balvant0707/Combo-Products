@@ -80,13 +80,13 @@ export async function createBox(shop, data, admin) {
 
   if (admin) {
     try {
+      // Step 1: Create the product (API 2025-01+ removed variants from ProductCreateInput)
       const resp = await admin.graphql(CREATE_BUNDLE_PRODUCT_MUTATION, {
         variables: {
           product: {
             title: `[Bundle] ${data.displayTitle}`,
             status: "DRAFT",
             vendor: "ComboBuilder",
-            variants: [{ price: String(bundlePrice) }],
           },
         },
       });
@@ -95,6 +95,16 @@ export async function createBox(shop, data, admin) {
       if (product) {
         shopifyProductId = product.id;
         shopifyVariantId = product.variants?.edges?.[0]?.node?.id || null;
+
+        // Step 2: Update the auto-created default variant price
+        if (shopifyVariantId && bundlePrice > 0) {
+          await admin.graphql(UPDATE_BUNDLE_PRODUCT_PRICE_MUTATION, {
+            variables: {
+              productId: shopifyProductId,
+              variants: [{ id: shopifyVariantId, price: String(bundlePrice) }],
+            },
+          });
+        }
       }
     } catch (e) {
       console.error("[createBox] Failed to create Shopify product", e);
