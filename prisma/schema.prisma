@@ -19,18 +19,18 @@ model Session {
   shop          String
   state         String
   isOnline      Boolean   @default(false)
-  scope         String?
+  scope         String?   @db.Text
   expires       DateTime?
-  accessToken   String
+  accessToken   String    @db.Text
   userId        BigInt?
-  firstName     String?
-  lastName      String?
-  email         String?
+  firstName     String?   @db.Text
+  lastName      String?   @db.Text
+  email         String?   @db.Text
   accountOwner  Boolean   @default(false)
-  locale        String?
+  locale        String?   @db.Text
   collaborator  Boolean?  @default(false)
   emailVerified Boolean?  @default(false)
-  refreshToken        String?
+  refreshToken        String?   @db.Text
   refreshTokenExpires DateTime?
 }
 
