@@ -13,6 +13,7 @@ const DEFAULTS = {
   giftMessageField: false,
   analyticsTracking: true,
   emailNotifications: false,
+  presetTheme: "custom",
 };
 
 export async function getSettings(shop) {
@@ -35,6 +36,7 @@ export async function upsertSettings(shop, data) {
     giftMessageField: parseBool(data.giftMessageField, DEFAULTS.giftMessageField),
     analyticsTracking: parseBool(data.analyticsTracking, DEFAULTS.analyticsTracking),
     emailNotifications: parseBool(data.emailNotifications, DEFAULTS.emailNotifications),
+    presetTheme: data.presetTheme ?? DEFAULTS.presetTheme,
   };
 
   return db.appSettings.upsert({

@@ -136,6 +136,7 @@ model AppSettings {
   giftMessageField   Boolean  @default(false)
   analyticsTracking  Boolean  @default(true)
   emailNotifications Boolean  @default(false)
+  presetTheme        String?  @default("custom") @db.VarChar(50)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 

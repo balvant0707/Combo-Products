@@ -13,7 +13,8 @@
 
   /* ── Neutral surface / border ── */
   --cb-border:        #e5e7eb;
-  --cb-border-dashed: #c9ccd0;
+  --cb-border-dashed: var(--cb-border);   /* inherits theme border */
+  --cb-idle-num:      #c9ccd0;            /* inactive slot number colour */
   --cb-bg:            #ffffff;
   --cb-bg-page:       #f9fafb;
 
@@ -252,7 +253,7 @@
   justify-content: center;
   font-size: 26px;
   font-weight: 700;
-  color: #c9ccd0;
+  color: var(--cb-idle-num);
   transition: all var(--cb-transition);
   overflow: hidden;
   font-family: var(--cb-font);

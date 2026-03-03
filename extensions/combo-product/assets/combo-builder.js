@@ -16,6 +16,56 @@
     });
   }
 
+  // ─── Preset Theme Palettes ────────────────────────────────────────────────────
+
+  var PRESET_THEMES = {
+    'oh-so-minimal':     { primary: '#1a1a1a', bg: '#fafafa', text: '#111827', muted: '#6b7280', border: '#e5e7eb', idleNum: '#d1d5db', accentLt: '#f3f4f6', headingClr: '#1a1a1a' },
+    'fresh-gradient':    { primary: '#7c3aed', bg: '#faf5ff', text: '#1e1b4b', muted: '#6d28d9', border: '#ede9fe', idleNum: '#c4b5fd', accentLt: '#ede9fe', headingClr: '#5b21b6' },
+    'aqua':              { primary: '#0891b2', bg: '#ecfeff', text: '#0c4a6e', muted: '#0e7490', border: '#cffafe', idleNum: '#a5f3fc', accentLt: '#cffafe', headingClr: '#0e7490' },
+    'golden-hour':       { primary: '#d97706', bg: '#fffbeb', text: '#1c1917', muted: '#b45309', border: '#fde68a', idleNum: '#fcd34d', accentLt: '#fef3c7', headingClr: '#92400e' },
+    'sharp-edge':        { primary: '#000000', bg: '#ffffff', text: '#000000', muted: '#374151', border: '#000000', idleNum: '#9ca3af', accentLt: '#f3f4f6', headingClr: '#000000' },
+    'poseidon':          { primary: '#38bdf8', bg: '#0c1445', text: '#e0f2fe', muted: '#93c5fd', border: '#1e3a8a', idleNum: '#475569', accentLt: '#1e3a8a', headingClr: '#7dd3fc' },
+    'sand-dunes':        { primary: '#92400e', bg: '#fef9ee', text: '#1c1917', muted: '#78350f', border: '#fcd34d', idleNum: '#fbbf24', accentLt: '#fef3c7', headingClr: '#78350f' },
+    'bubblegum':         { primary: '#db2777', bg: '#fdf2f8', text: '#831843', muted: '#be185d', border: '#fbcfe8', idleNum: '#f9a8d4', accentLt: '#fce7f3', headingClr: '#9d174d' },
+    'cape-town':         { primary: '#dc2626', bg: '#f8fafc', text: '#0f172a', muted: '#64748b', border: '#fee2e2', idleNum: '#fca5a5', accentLt: '#fee2e2', headingClr: '#991b1b' },
+    'blackout':          { primary: '#e5e7eb', bg: '#000000', text: '#f9fafb', muted: '#9ca3af', border: '#374151', idleNum: '#4b5563', accentLt: '#1f2937', headingClr: '#f3f4f6' },
+    'urban-underground': { primary: '#a855f7', bg: '#1e1b4b', text: '#f5f3ff', muted: '#c084fc', border: '#312e81', idleNum: '#4c1d95', accentLt: '#2e1065', headingClr: '#d8b4fe' },
+    'cyber-pink':        { primary: '#ec4899', bg: '#0f172a', text: '#fce7f3', muted: '#f472b6', border: '#1e1b4b', idleNum: '#4c1d95', accentLt: '#1e1b4b', headingClr: '#f9a8d4' },
+    'key-lime-pie':      { primary: '#84cc16', bg: '#111827', text: '#f7fee7', muted: '#a3e635', border: '#1f2937', idleNum: '#374151', accentLt: '#1a2e05', headingClr: '#bef264' },
+    'lemonade':          { primary: '#ca8a04', bg: '#fefce8', text: '#1c1917', muted: '#a16207', border: '#fef08a', idleNum: '#fde047', accentLt: '#fefce8', headingClr: '#854d0e' },
+    'nile':              { primary: '#f59e0b', bg: '#0c1a0e', text: '#f0fdf4', muted: '#fbbf24', border: '#14532d', idleNum: '#166534', accentLt: '#052e16', headingClr: '#fcd34d' },
+    'lavender':          { primary: '#8b5cf6', bg: '#f5f3ff', text: '#1e1b4b', muted: '#7c3aed', border: '#ddd6fe', idleNum: '#c4b5fd', accentLt: '#ede9fe', headingClr: '#5b21b6' },
+    'magma-lake':        { primary: '#f97316', bg: '#1c0a00', text: '#fff7ed', muted: '#fb923c', border: '#431407', idleNum: '#7c2d12', accentLt: '#431407', headingClr: '#fed7aa' },
+    'smooth-silk':       { primary: '#f43f5e', bg: '#fff1f2', text: '#1c0a0e', muted: '#be123c', border: '#fecdd3', idleNum: '#fda4af', accentLt: '#ffe4e6', headingClr: '#9f1239' },
+  };
+
+  function applyPresetTheme(rootEl, themeName) {
+    if (!themeName || themeName === 'custom' || !PRESET_THEMES[themeName]) return;
+    var t = PRESET_THEMES[themeName];
+    var instance = rootEl.getAttribute('data-cb-instance') || rootEl.getAttribute('data-block-id');
+    if (!instance) return;
+
+    var styleId = 'cb-theme-override-' + instance;
+    var existing = document.getElementById(styleId);
+    if (existing) existing.parentNode.removeChild(existing);
+
+    var style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = '[data-cb-instance="' + instance + '"] {' +
+      '--cb-primary:' + t.primary + ';' +
+      '--cb-primary-hover:' + t.primary + ';' +
+      '--cb-primary-light:' + t.accentLt + ';' +
+      '--cb-primary-glow:' + t.primary + '33;' +
+      '--cb-bg:' + t.bg + ';' +
+      '--cb-text:' + t.text + ';' +
+      '--cb-text-muted:' + t.muted + ';' +
+      '--cb-border:' + t.border + ';' +
+      '--cb-border-dashed:' + t.border + ';' +
+      '--cb-idle-num:' + t.idleNum + ';' +
+    '}';
+    document.head.appendChild(style);
+  }
+
   // ─── Sticky Footer singleton ──────────────────────────────────────────────────
   var _stickyEl = null;
   var _stickyBtn = null;
@@ -108,6 +158,7 @@
       if (boxes.length === 0) { root.innerHTML = ''; return; }
 
       var resolvedHeading = root.dataset.heading || config.heading || (settings && settings.widgetHeadingText) || 'Build Your Own Box!';
+      if (settings && settings.presetTheme) applyPresetTheme(root, settings.presetTheme);
       renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root });
     });
   }

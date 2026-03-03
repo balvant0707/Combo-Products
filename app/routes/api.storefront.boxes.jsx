@@ -46,6 +46,7 @@ export const loader = async ({ request }) => {
     activeSlotColor: settings.activeSlotColor || "#2A7A4F",
     showSavingsBadge: settings.showSavingsBadge,
     showProductPrices: settings.showProductPrices,
+    presetTheme: settings.presetTheme || "custom",
   };
 
   return Response.json({ boxes: publicBoxes, settings: publicSettings }, { headers: CORS_HEADERS });
