@@ -69,6 +69,9 @@ model ComboBox {
   isGiftBox          Boolean           @default(false)
   allowDuplicates    Boolean           @default(false)
   bannerImageUrl     String?           @db.VarChar(500)
+  bannerImageData    Bytes?            @db.MediumBlob
+  bannerImageMimeType String?          @db.VarChar(100)
+  bannerImageFileName String?          @db.VarChar(255)
   sortOrder          Int               @default(0)
   isActive           Boolean           @default(true)
   giftMessageEnabled Boolean           @default(false)

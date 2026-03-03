@@ -1,4 +1,5 @@
 import db from "../db.server";
+import { Buffer } from "node:buffer";
 
 const CREATE_BUNDLE_PRODUCT_MUTATION = `#graphql
   mutation productCreate($product: ProductCreateInput!) {
@@ -36,7 +37,17 @@ const UPDATE_BUNDLE_PRODUCT_PRICE_MUTATION = `#graphql
   }
 `;
 
-export async function listBoxes(shop, activeOnly = false) {
+function getBannerImageDataUri(box) {
+  if (!box?.bannerImageData || !box?.bannerImageMimeType) return null;
+  const base64 = Buffer.from(box.bannerImageData).toString("base64");
+  return `data:${box.bannerImageMimeType};base64,${base64}`;
+}
+
+export function getBannerImageSrc(box) {
+  return box?.bannerImageUrl || getBannerImageDataUri(box);
+}
+
+export async function listBoxes(shop, activeOnly = false, includeBannerBinary = false) {
   const where = {
     shop,
     deletedAt: null,
@@ -52,7 +63,15 @@ export async function listBoxes(shop, activeOnly = false) {
     orderBy: { sortOrder: "asc" },
   });
 
-  return boxes;
+  if (includeBannerBinary) return boxes;
+
+  return boxes.map((box) => {
+    const sanitized = { ...box };
+    delete sanitized.bannerImageData;
+    delete sanitized.bannerImageMimeType;
+    delete sanitized.bannerImageFileName;
+    return sanitized;
+  });
 }
 
 export async function getBox(id, shop) {
@@ -113,6 +132,8 @@ export async function createBox(shop, data, admin) {
 
   const nextSortOrder = await getNextSortOrder(shop);
 
+  const hasUploadedBanner = Boolean(data.bannerImage?.bytes);
+
   const box = await db.comboBox.create({
     data: {
       shop,
@@ -123,7 +144,10 @@ export async function createBox(shop, data, admin) {
       isGiftBox: data.isGiftBox === "true" || data.isGiftBox === true,
       allowDuplicates:
         data.allowDuplicates === "true" || data.allowDuplicates === true,
-      bannerImageUrl: data.bannerImageUrl || null,
+      bannerImageUrl: hasUploadedBanner ? null : data.bannerImageUrl || null,
+      bannerImageData: hasUploadedBanner ? data.bannerImage.bytes : null,
+      bannerImageMimeType: hasUploadedBanner ? data.bannerImage.mimeType : null,
+      bannerImageFileName: hasUploadedBanner ? data.bannerImage.fileName : null,
       sortOrder: nextSortOrder,
       isActive: data.isActive !== "false" && data.isActive !== false,
       giftMessageEnabled:
@@ -184,7 +208,10 @@ export async function updateBox(id, shop, data, admin) {
     }
   }
 
-  const updated = await db.comboBox.update({
+  const hasUploadedBanner = Boolean(data.bannerImage?.bytes);
+  const shouldRemoveBanner = data.removeBannerImage === true;
+
+  await db.comboBox.update({
     where: { id: parseInt(id) },
     data: {
       boxName: data.boxName ?? existing.boxName,
@@ -199,10 +226,28 @@ export async function updateBox(id, shop, data, admin) {
         data.allowDuplicates !== undefined
           ? data.allowDuplicates === "true" || data.allowDuplicates === true
           : existing.allowDuplicates,
-      bannerImageUrl:
-        data.bannerImageUrl !== undefined
-          ? data.bannerImageUrl || null
-          : existing.bannerImageUrl,
+      bannerImageUrl: hasUploadedBanner
+        ? null
+        : shouldRemoveBanner
+          ? null
+          : data.bannerImageUrl !== undefined
+            ? data.bannerImageUrl || null
+            : existing.bannerImageUrl,
+      bannerImageData: hasUploadedBanner
+        ? data.bannerImage.bytes
+        : shouldRemoveBanner
+          ? null
+          : existing.bannerImageData,
+      bannerImageMimeType: hasUploadedBanner
+        ? data.bannerImage.mimeType
+        : shouldRemoveBanner
+          ? null
+          : existing.bannerImageMimeType,
+      bannerImageFileName: hasUploadedBanner
+        ? data.bannerImage.fileName
+        : shouldRemoveBanner
+          ? null
+          : existing.bannerImageFileName,
       isActive:
         data.isActive !== undefined
           ? data.isActive !== "false" && data.isActive !== false

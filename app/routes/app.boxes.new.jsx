@@ -23,6 +23,40 @@ const PRODUCTS_QUERY = `#graphql
   }
 `;
 
+const MAX_BANNER_IMAGE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_BANNER_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+]);
+
+async function parseBannerImage(formData, errors) {
+  const file = formData.get("bannerImage");
+
+  if (!file || typeof file !== "object" || typeof file.arrayBuffer !== "function" || !file.size) {
+    return null;
+  }
+
+  if (!ALLOWED_BANNER_MIME_TYPES.has(file.type)) {
+    errors.bannerImage = "Only JPG, PNG, WEBP, GIF, and AVIF files are allowed";
+    return null;
+  }
+
+  if (file.size > MAX_BANNER_IMAGE_SIZE) {
+    errors.bannerImage = "Banner image must be 5MB or smaller";
+    return null;
+  }
+
+  return {
+    bytes: new Uint8Array(await file.arrayBuffer()),
+    mimeType: file.type,
+    fileName: file.name || null,
+  };
+}
+
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
   const url = new URL(request.url);
@@ -50,6 +84,8 @@ export const action = async ({ request }) => {
   try {
     eligibleProducts = JSON.parse(formData.get("eligibleProducts") || "[]");
   } catch {}
+  const errors = {};
+  const bannerImage = await parseBannerImage(formData, errors);
 
   const data = {
     boxName: formData.get("boxName"),
@@ -58,13 +94,11 @@ export const action = async ({ request }) => {
     bundlePrice: formData.get("bundlePrice"),
     isGiftBox: formData.get("isGiftBox") === "true",
     allowDuplicates: formData.get("allowDuplicates") === "true",
-    bannerImageUrl: formData.get("bannerImageUrl") || null,
+    bannerImage,
     isActive: formData.get("isActive") !== "false",
     giftMessageEnabled: formData.get("giftMessageEnabled") === "true",
     eligibleProducts,
   };
-
-  const errors = {};
   if (!data.boxName?.trim()) errors.boxName = "Box name is required";
   if (!data.displayTitle?.trim()) errors.displayTitle = "Display title is required";
   if (!data.itemCount || parseInt(data.itemCount) < 1 || parseInt(data.itemCount) > 20)
@@ -332,7 +366,7 @@ export default function CreateBoxPage() {
       )}
 
       <s-section>
-        <Form method="POST">
+        <Form method="POST" encType="multipart/form-data">
           {/* Hidden inputs for final computed values */}
           <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
           <input type="hidden" name="itemCount" value={itemCount} />
@@ -523,13 +557,17 @@ export default function CreateBoxPage() {
               />
 
               <div style={{ gridColumn: "1 / -1" }}>
-                <label style={labelStyle}>Banner Image URL (optional)</label>
+                <label style={labelStyle}>Banner Image (optional)</label>
                 <input
-                  type="url"
-                  name="bannerImageUrl"
-                  placeholder="https://... (600×300px recommended)"
+                  type="file"
+                  name="bannerImage"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
                   style={fieldStyle}
                 />
+                <div style={{ fontSize: "11px", color: "#7a7670", marginTop: "6px" }}>
+                  Upload JPG, PNG, WEBP, GIF, or AVIF (max 5MB)
+                </div>
+                {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
               </div>
             </div>
           </div>
@@ -698,3 +736,4 @@ export default function CreateBoxPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+

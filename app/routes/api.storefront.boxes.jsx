@@ -1,4 +1,4 @@
-import { listBoxes } from "../models/boxes.server";
+import { listBoxes, getBannerImageSrc } from "../models/boxes.server";
 import { getSettings } from "../models/settings.server";
 
 const CORS_HEADERS = {
@@ -20,7 +20,7 @@ export const loader = async ({ request }) => {
   }
 
   const [boxes, settings] = await Promise.all([
-    listBoxes(shop, true),
+    listBoxes(shop, true, true),
     getSettings(shop),
   ]);
 
@@ -32,7 +32,7 @@ export const loader = async ({ request }) => {
     bundlePrice: parseFloat(box.bundlePrice),
     isGiftBox: box.isGiftBox,
     allowDuplicates: box.allowDuplicates,
-    bannerImageUrl: box.bannerImageUrl,
+    bannerImageUrl: getBannerImageSrc(box),
     giftMessageEnabled: box.giftMessageEnabled,
     shopifyVariantId: box.shopifyVariantId,
     sortOrder: box.sortOrder,
