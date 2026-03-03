@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE `Session` (
+CREATE TABLE `session` (
     `id` VARCHAR(191) NOT NULL,
     `shop` VARCHAR(191) NOT NULL,
     `state` VARCHAR(191) NOT NULL,

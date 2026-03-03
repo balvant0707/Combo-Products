@@ -32,6 +32,8 @@ model Session {
   emailVerified Boolean?  @default(false)
   refreshToken        String?   @db.Text
   refreshTokenExpires DateTime?
+
+  @@map("session")
 }
 
 model shop {

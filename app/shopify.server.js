@@ -5,8 +5,17 @@ import {
   shopifyApp,
 } from "@shopify/shopify-app-react-router/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
-import prisma from "./db.server";
+import prisma, { ensureAppTables } from "./db.server";
 import { upsertSessionFromAuth, upsertShopFromAdmin } from "./models/shop.server";
+
+ensureAppTables().catch((error) => {
+  console.error("[DB Init] Failed to ensure app tables", error);
+});
+
+const prismaSessionStorage = new PrismaSessionStorage(prisma, {
+  connectionRetries: 10,
+  connectionRetryIntervalMs: 1000,
+});
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -15,7 +24,7 @@ const shopify = shopifyApp({
   scopes: process.env.SCOPES?.split(","),
   appUrl: process.env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
-  sessionStorage: new PrismaSessionStorage(prisma),
+  sessionStorage: prismaSessionStorage,
   distribution: AppDistribution.AppStore,
   future: {
     expiringOfflineAccessTokens: true,
