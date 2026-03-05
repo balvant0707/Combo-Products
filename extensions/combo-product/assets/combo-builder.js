@@ -750,15 +750,32 @@
         });
         return;
       }
-      addToCart(
-        box,
-        slots,
-        sessionId,
-        giftInput ? giftInput.value : null,
-        inlineCartBtn,
-        _stickyBtn,
-        resolveAddToCartLabel(ctx.settings)
-      );
+
+      // Resolve missing variantIds (existing boxes created before the fix)
+      var resolvePromises = slots.map(function (p) {
+        if (!p || (p.variantIds && p.variantIds.length > 0)) return Promise.resolve();
+        if (!p.productHandle) return Promise.resolve();
+        return fetch('/products/' + p.productHandle + '.js')
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data.variants && data.variants.length > 0) {
+              p.variantIds = [String(data.variants[0].id)];
+            }
+          })
+          .catch(function () {});
+      });
+
+      Promise.all(resolvePromises).then(function () {
+        addToCart(
+          box,
+          slots,
+          sessionId,
+          giftInput ? giftInput.value : null,
+          inlineCartBtn,
+          _stickyBtn,
+          resolveAddToCartLabel(ctx.settings)
+        );
+      });
     }
 
     inlineCartBtn.addEventListener('click', doAddToCart);

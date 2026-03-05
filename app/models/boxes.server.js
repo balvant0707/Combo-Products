@@ -37,6 +37,15 @@ const UPDATE_BUNDLE_PRODUCT_PRICE_MUTATION = `#graphql
   }
 `;
 
+const ACTIVATE_BUNDLE_PRODUCT_MUTATION = `#graphql
+  mutation productUpdate($product: ProductUpdateInput!) {
+    productUpdate(product: $product) {
+      product { id status }
+      userErrors { field message }
+    }
+  }
+`;
+
 const DELETE_BUNDLE_PRODUCT_MUTATION = `#graphql
   mutation productDelete($input: ProductDeleteInput!) {
     productDelete(input: $input) {
@@ -116,8 +125,9 @@ export async function createBox(shop, data, admin) {
         variables: {
           product: {
             title: `[Bundle] ${data.displayTitle}`,
-            status: "DRAFT",
+            status: "ACTIVE",
             vendor: "ComboBuilder",
+            tags: ["combo-builder-internal", "hidden"],
           },
         },
       });
@@ -205,24 +215,28 @@ export async function updateBox(id, shop, data, admin) {
   const priceChanged =
     parseFloat(bundlePrice) !== parseFloat(existing.bundlePrice);
 
-  // Update Shopify product price if changed
-  if (
-    priceChanged &&
-    existing.shopifyProductId &&
-    existing.shopifyVariantId &&
-    admin
-  ) {
+  // Ensure bundle product is ACTIVE (may be DRAFT from old boxes) and update price if changed
+  if (existing.shopifyProductId && admin) {
     try {
-      await admin.graphql(UPDATE_BUNDLE_PRODUCT_PRICE_MUTATION, {
-        variables: {
-          productId: existing.shopifyProductId,
-          variants: [
-            { id: existing.shopifyVariantId, price: String(bundlePrice) },
-          ],
-        },
+      await admin.graphql(ACTIVATE_BUNDLE_PRODUCT_MUTATION, {
+        variables: { product: { id: existing.shopifyProductId, status: "ACTIVE" } },
       });
     } catch (e) {
-      console.error("[updateBox] Failed to update Shopify product price", e);
+      console.error("[updateBox] Failed to activate Shopify product", e);
+    }
+    if (priceChanged && existing.shopifyVariantId) {
+      try {
+        await admin.graphql(UPDATE_BUNDLE_PRODUCT_PRICE_MUTATION, {
+          variables: {
+            productId: existing.shopifyProductId,
+            variants: [
+              { id: existing.shopifyVariantId, price: String(bundlePrice) },
+            ],
+          },
+        });
+      } catch (e) {
+        console.error("[updateBox] Failed to update Shopify product price", e);
+      }
     }
   }
 
