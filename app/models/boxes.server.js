@@ -368,6 +368,22 @@ async function getNextSortOrder(shop) {
   return (last?.sortOrder ?? -1) + 1;
 }
 
+export async function activateAllBundleProducts(shop, admin) {
+  const boxes = await db.comboBox.findMany({
+    where: { shop, deletedAt: null, shopifyProductId: { not: null } },
+    select: { id: true, shopifyProductId: true },
+  });
+  await Promise.all(boxes.map(async (box) => {
+    try {
+      await admin.graphql(ACTIVATE_BUNDLE_PRODUCT_MUTATION, {
+        variables: { product: { id: box.shopifyProductId, status: "ACTIVE" } },
+      });
+    } catch (e) {
+      console.error("[activateAllBundleProducts] Failed for box", box.id, e);
+    }
+  }));
+}
+
 export async function getActiveBoxCount(shop) {
   return db.comboBox.count({
     where: { shop, isActive: true, deletedAt: null },

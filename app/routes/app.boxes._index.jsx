@@ -6,11 +6,14 @@ import {
   deleteBox,
   toggleBoxStatus,
   reorderBoxes,
+  activateAllBundleProducts,
 } from "../models/boxes.server";
 
 export const loader = async ({ request }) => {
-  const { session } = await authenticate.admin(request);
+  const { session, admin } = await authenticate.admin(request);
   const boxes = await listBoxes(session.shop);
+  // Fire-and-forget: activate any DRAFT bundle products left from before the fix
+  activateAllBundleProducts(session.shop, admin).catch(() => {});
   return {
     boxes: boxes.map((b) => ({
       id: b.id,
