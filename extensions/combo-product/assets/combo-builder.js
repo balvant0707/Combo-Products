@@ -844,6 +844,7 @@
           '_combo_session_id': sessionId,
           'Bundle': box.displayTitle,
         };
+        if (box.bannerImageUrl) props['_combo_box_image'] = box.bannerImageUrl;
         props['_item_' + (idx + 1)] = product.productId;
         if (giftMessage) props['Gift Message'] = giftMessage;
         fallbackItems.push({ id: variantId, quantity: 1, properties: props });
@@ -877,6 +878,7 @@
         '_combo_box_id': String(box.id),
         'Bundle': box.displayTitle,
       };
+      if (box.bannerImageUrl) bundleProps['_combo_box_image'] = box.bannerImageUrl;
       slots.forEach(function (p, idx) {
         if (p) bundleProps['Item ' + (idx + 1)] = p.productTitle || ('Item ' + (idx + 1));
       });
@@ -906,7 +908,10 @@
         setBtns('success', 'Added to Cart! ✓');
         document.dispatchEvent(new CustomEvent('cart:refresh', { bubbles: true }));
         document.dispatchEvent(new CustomEvent('cart:updated', { bubbles: true }));
-        setTimeout(function () { window.location.href = '/cart'; }, 1200);
+        var drawerOpened = tryOpenThemeCartDrawer();
+        if (!drawerOpened) {
+          setTimeout(function () { window.location.href = '/cart'; }, 1200);
+        }
       })
       .catch(function (err) {
         console.error('[ComboBuilder] Add to cart error:', err);
@@ -921,6 +926,76 @@
       return product.variantIds[0];
     }
     return null;
+  }
+
+  function tryOpenThemeCartDrawer() {
+    var opened = false;
+
+    var openEvents = [
+      'cart:open',
+      'drawer:open',
+      'cart-drawer:open',
+      'theme:cart:open',
+      'cartdrawer:open',
+    ];
+
+    openEvents.forEach(function (eventName) {
+      try {
+        document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }));
+      } catch (e) {
+        console.warn('[ComboBuilder] Failed to dispatch drawer event', eventName, e);
+      }
+    });
+
+    var webComponentDrawer = document.querySelector('cart-drawer');
+    if (webComponentDrawer) {
+      if (typeof webComponentDrawer.open === 'function') {
+        try {
+          webComponentDrawer.open();
+          opened = true;
+        } catch (e) {
+          console.warn('[ComboBuilder] cart-drawer.open() failed:', e);
+        }
+      }
+
+      var drawerDetails = webComponentDrawer.querySelector('details');
+      if (drawerDetails) {
+        drawerDetails.setAttribute('open', 'open');
+        opened = true;
+      }
+
+      webComponentDrawer.classList.add('active');
+      webComponentDrawer.setAttribute('aria-hidden', 'false');
+
+      var drawerOverlay = webComponentDrawer.querySelector('#CartDrawer-Overlay, .cart-drawer__overlay');
+      if (drawerOverlay) drawerOverlay.classList.add('active');
+
+      document.body.classList.add('overflow-hidden');
+      document.documentElement.classList.add('overflow-hidden');
+    }
+
+    var genericDrawer = document.querySelector(
+      '#CartDrawer, .cart-drawer, [data-cart-drawer], #AjaxCartDrawer, #mini-cart, .mini-cart-drawer'
+    );
+    if (genericDrawer) {
+      genericDrawer.classList.add('active', 'is-active', 'open', 'is-open');
+      genericDrawer.setAttribute('aria-hidden', 'false');
+      opened = true;
+    }
+
+    var cartTrigger = document.querySelector(
+      '[data-cart-drawer-trigger], [aria-controls="CartDrawer"], button[name="cart"], .header__icon--cart'
+    );
+    if (cartTrigger) {
+      try {
+        cartTrigger.click();
+        opened = true;
+      } catch (e) {
+        console.warn('[ComboBuilder] Cart trigger click failed:', e);
+      }
+    }
+
+    return opened;
   }
 
   // ─── Bootstrap ────────────────────────────────────────────────────────────────

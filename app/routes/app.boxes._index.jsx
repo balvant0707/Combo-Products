@@ -7,16 +7,17 @@ import {
   toggleBoxStatus,
   reorderBoxes,
   activateAllBundleProducts,
+  repairMissingShopifyProducts,
   repairMissingShopifyVariantIds,
 } from "../models/boxes.server";
 
 export const loader = async ({ request }) => {
   const { session, admin } = await authenticate.admin(request);
+  await repairMissingShopifyProducts(session.shop, admin);
+  await repairMissingShopifyVariantIds(session.shop, admin);
   const boxes = await listBoxes(session.shop);
   // Fire-and-forget: activate any DRAFT bundle products left from before the fix
   activateAllBundleProducts(session.shop, admin).catch(() => {});
-  // Fire-and-forget: backfill missing bundle variant IDs used by /cart/add.js
-  repairMissingShopifyVariantIds(session.shop, admin).catch(() => {});
   return {
     boxes: boxes.map((b) => ({
       id: b.id,

@@ -330,6 +330,7 @@ export async function getBoxWithProducts(id, shop) {
 export async function createBox(shop, data, admin) {
   const itemCount = parseInt(data.itemCount) || 1;
   const bundlePrice = parseFloat(data.bundlePrice) || 0;
+  const bundleProductTitle = `[Bundle] ${data.boxName || data.displayTitle}`;
 
   // Create hidden Shopify product for bundle pricing
   let shopifyProductId = null;
@@ -339,7 +340,7 @@ export async function createBox(shop, data, admin) {
     try {
       const result = await createShopifyBundleProduct(
         admin,
-        `[Bundle] ${data.displayTitle}`,
+        bundleProductTitle,
         bundlePrice,
       );
       shopifyProductId = result.shopifyProductId;
@@ -419,6 +420,7 @@ export async function updateBox(id, shop, data, admin) {
 
   // Ensure bundle product is ACTIVE (may be DRAFT from old boxes) and update price if changed
   let resolvedVariantId = existing.shopifyVariantId;
+  const desiredBundleTitle = `[Bundle] ${data.boxName ?? existing.boxName ?? data.displayTitle ?? existing.displayTitle}`;
 
   if (existing.shopifyProductId && admin) {
     if (!resolvedVariantId) {
@@ -447,7 +449,13 @@ export async function updateBox(id, shop, data, admin) {
 
     try {
       await admin.graphql(ACTIVATE_BUNDLE_PRODUCT_MUTATION, {
-        variables: { product: { id: existing.shopifyProductId, status: "ACTIVE" } },
+        variables: {
+          product: {
+            id: existing.shopifyProductId,
+            status: "ACTIVE",
+            title: desiredBundleTitle,
+          },
+        },
       });
     } catch (e) {
       console.error("[updateBox] Failed to activate Shopify product", e);
@@ -615,7 +623,7 @@ export async function activateAllBundleProducts(shop, admin) {
 export async function repairMissingShopifyProducts(shop, admin) {
   const boxes = await db.comboBox.findMany({
     where: { shop, deletedAt: null, shopifyProductId: null },
-    select: { id: true, displayTitle: true, bundlePrice: true },
+    select: { id: true, boxName: true, displayTitle: true, bundlePrice: true },
   });
   if (boxes.length === 0) return;
 
@@ -623,7 +631,7 @@ export async function repairMissingShopifyProducts(shop, admin) {
     try {
       const { shopifyProductId, shopifyVariantId } = await createShopifyBundleProduct(
         admin,
-        `[Bundle] ${box.displayTitle}`,
+        `[Bundle] ${box.boxName || box.displayTitle}`,
         parseFloat(box.bundlePrice),
       );
       if (shopifyProductId) {
