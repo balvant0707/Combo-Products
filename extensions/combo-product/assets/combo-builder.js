@@ -274,8 +274,10 @@
     // Banner image
     var banner = document.createElement('div');
     banner.className = 'cb-box-banner';
-    if (box.bannerImageUrl) {
-      banner.style.backgroundImage = 'url(' + box.bannerImageUrl + ')';
+    var bannerSrc = box.bannerImageUrl ||
+      (box.hasUploadedBanner ? ctx.apiBase + '/api/storefront/boxes/' + box.id + '/banner' : null);
+    if (bannerSrc) {
+      banner.style.backgroundImage = 'url("' + bannerSrc + '")';
       banner.style.backgroundSize = 'cover';
       banner.style.backgroundPosition = 'center';
     }

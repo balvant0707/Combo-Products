@@ -19,20 +19,15 @@ export const loader = async ({ request }) => {
     return Response.json({ error: "shop parameter required" }, { status: 400, headers: CORS_HEADERS });
   }
 
-  // Use origin for uploaded-banner URLs so the browser can fetch them directly
-  const origin = url.origin;
-
   const [boxes, settings] = await Promise.all([
     listBoxes(shop, true, false),  // bannerImageMimeType still returned to detect uploads
     getSettings(shop),
   ]);
 
   const publicBoxes = boxes.map((box) => {
-    // Prefer external URL; fall back to dedicated binary-serving route for uploads
-    let bannerImageUrl = box.bannerImageUrl || null;
-    if (!bannerImageUrl && box.bannerImageMimeType) {
-      bannerImageUrl = `${origin}/api/storefront/boxes/${box.id}/banner`;
-    }
+    const bannerImageUrl = box.bannerImageUrl || null;
+    // Flag so the widget can build the URL via the app proxy (avoids cross-origin issues)
+    const hasUploadedBanner = !bannerImageUrl && !!box.bannerImageMimeType;
     return {
       id: box.id,
       boxName: box.boxName,
@@ -42,6 +37,7 @@ export const loader = async ({ request }) => {
       isGiftBox: box.isGiftBox,
       allowDuplicates: box.allowDuplicates,
       bannerImageUrl,
+      hasUploadedBanner,
       giftMessageEnabled: box.giftMessageEnabled,
       shopifyVariantId: box.shopifyVariantId,
       sortOrder: box.sortOrder,

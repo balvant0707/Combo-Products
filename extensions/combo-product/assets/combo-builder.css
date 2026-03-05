@@ -256,7 +256,7 @@
 .cb-slot-step-num {
   width: 84px;
   height: 84px;
-  border: 2.5px dashed #c9ccd0;
+  border: 2.5px dashed var(--cb-idle-num);
   border-radius: 12px;
   background: var(--cb-bg);
   display: flex;
@@ -264,7 +264,7 @@
   justify-content: center;
   font-size: 28px;
   font-weight: 800;
-  color: #c9ccd0;
+  color: var(--cb-idle-num);
   transition: all var(--cb-transition);
   overflow: hidden;
   font-family: var(--cb-font);
@@ -345,7 +345,7 @@
 .cb-slot-connector {
   width: 36px;
   height: 2px;
-  border-top: 2.5px dashed #c9ccd0;
+  border-top: 2.5px dashed var(--cb-idle-num);
   align-self: flex-start;
   margin-top: 41px;
   flex-shrink: 0;
@@ -760,7 +760,7 @@
 
 .cb-sticky-center {
   display: flex;
-  flex-direction: column;
+  justify-content: end;
   gap: 4px;
   flex: 1;
   min-width: 0;
