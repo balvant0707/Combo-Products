@@ -344,11 +344,13 @@
 /* Dashed connector — vertically centered on 84px box */
 .cb-slot-connector {
   width: 36px;
-  height: 2px;
+  height: 0;
+  border: none;
   border-top: 2.5px dashed var(--cb-idle-num);
   align-self: flex-start;
-  margin-top: 41px;
+  margin-top: 42px;
   flex-shrink: 0;
+  background: none;
 }
 
 /* Remove × on filled slot */
@@ -889,7 +891,7 @@
   .cb-box-card { width: 220px; }
   .cb-box-banner { height: 160px; }
   .cb-product-grid { grid-template-columns: repeat(2, 1fr); }
-  .cb-slot-connector { width: 22px; margin-top: 41px; }
+  .cb-slot-connector { width: 22px; height: 0; border: none; border-top: 2.5px dashed var(--cb-idle-num); margin-top: 42px; background: none; }
   .cb-sticky-footer { padding: 10px 16px; }
   .cb-sticky-name { font-size: 13px; }
   .cb-sticky-progress { display: none; }
@@ -902,7 +904,7 @@
   .cb-box-buy-text, .cb-box-price-text { font-size: 13px; }
   .cb-product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .cb-slot-step-num { width: 64px; height: 64px; font-size: 22px; }
-  .cb-slot-connector { width: 16px; margin-top: 31px; }
+  .cb-slot-connector { width: 16px; height: 0; border: none; border-top: 2.5px dashed var(--cb-idle-num); margin-top: 32px; background: none; }
   .cb-slot-arrow { margin: 0 6px; margin-top: 20px; font-size: 18px; }
   .cb-inline-cart-btn { padding: 10px 14px; font-size: 11px; margin-top: 13px; }
   .cb-sticky-footer { flex-wrap: wrap; padding: 10px 14px; gap: 8px; }
