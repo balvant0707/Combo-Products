@@ -39,7 +39,7 @@ export const loader = async ({ request }) => {
       bannerImageUrl,
       hasUploadedBanner,
       giftMessageEnabled: box.giftMessageEnabled,
-      shopifyVariantId: box.shopifyVariantId,
+      shopifyVariantId: box.shopifyVariantId ? box.shopifyVariantId.split('/').pop() : null,
       sortOrder: box.sortOrder,
     };
   });

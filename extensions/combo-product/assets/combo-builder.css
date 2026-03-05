@@ -352,8 +352,6 @@
 
 .cb-slot-step-item {
   display: block;
-  font-size: 18px;
-  font-weight: 800;
   color: var(--cb-text);
   text-decoration: underline;
   cursor: default;
@@ -403,7 +401,7 @@
 .cb-slot-arrow {
   font-size: 62px;
   font-weight: 500;
-  color: #111111;
+  color: var(--cb-text);
   flex-shrink: 0;
   align-self: flex-start;
   margin: 0 4px;

@@ -61,8 +61,9 @@ export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
   const url = new URL(request.url);
   const query = url.searchParams.get("q") || "";
+  const searchQuery = query ? `${query} NOT vendor:ComboBuilder` : 'NOT vendor:ComboBuilder';
   const resp = await admin.graphql(PRODUCTS_QUERY, {
-    variables: { first: 50, query: query || null },
+    variables: { first: 50, query: searchQuery },
   });
   const json = await resp.json();
   const products = (json?.data?.products?.edges || []).map(({ node }) => ({
@@ -681,7 +682,7 @@ export default function CreateBoxPage() {
               </div>
             )}
 
-            <div style={{ maxHeight: "300px", overflowY: "auto", border: "1.5px solid #e5e7eb", borderRadius: "10px", overflow: "hidden" }}>
+            <div style={{ maxHeight: "300px", overflowY: "auto", border: "1.5px solid #e5e7eb", borderRadius: "10px" }}>
               {displayProducts.map((product) => (
                 <label
                   key={product.id}

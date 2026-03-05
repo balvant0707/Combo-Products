@@ -407,12 +407,16 @@
         // Number / thumbnail inside the step box
         var numEl = document.createElement('div');
         numEl.className = 'cb-slot-step-num';
-        if (slotProduct && slotProduct.productImageUrl) {
-          var thumb = document.createElement('img');
-          thumb.src = slotProduct.productImageUrl;
-          thumb.alt = slotProduct.productTitle || '';
-          thumb.className = 'cb-slot-step-thumb';
-          numEl.appendChild(thumb);
+        if (slotProduct) {
+          if (slotProduct.productImageUrl) {
+            var thumb = document.createElement('img');
+            thumb.src = slotProduct.productImageUrl;
+            thumb.alt = slotProduct.productTitle || '';
+            thumb.className = 'cb-slot-step-thumb';
+            numEl.appendChild(thumb);
+          } else {
+            numEl.textContent = (slotProduct.productTitle || '?').charAt(0).toUpperCase();
+          }
         } else {
           numEl.textContent = idx + 1;
         }

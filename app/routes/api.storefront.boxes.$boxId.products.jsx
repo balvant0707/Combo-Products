@@ -37,16 +37,24 @@ export const loader = async ({ request, params }) => {
     orderBy: { id: "asc" },
   });
 
-  const publicProducts = products.map((p) => ({
-    id: p.id,
-    productId: p.productId,
-    productTitle: p.productTitle,
-    productImageUrl: p.productImageUrl,
-    productHandle: p.productHandle,
-    productPrice: p.productPrice != null ? parseFloat(p.productPrice) : null,
-    isCollection: p.isCollection,
-    variantIds: p.variantIds,
-  }));
+  const publicProducts = products.map((p) => {
+    let variantIds = [];
+    if (p.variantIds) {
+      try { variantIds = JSON.parse(p.variantIds); } catch {}
+    }
+    // Strip GID prefix so Shopify /cart/add.js gets numeric IDs
+    variantIds = variantIds.map((id) => (typeof id === 'string' && id.includes('/') ? id.split('/').pop() : String(id)));
+    return {
+      id: p.id,
+      productId: p.productId,
+      productTitle: p.productTitle,
+      productImageUrl: p.productImageUrl,
+      productHandle: p.productHandle,
+      productPrice: p.productPrice != null ? parseFloat(p.productPrice) : null,
+      isCollection: p.isCollection,
+      variantIds,
+    };
+  });
 
   return Response.json(publicProducts, { headers: CORS_HEADERS });
 };

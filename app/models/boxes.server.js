@@ -171,14 +171,19 @@ export async function createBox(shop, data, admin) {
 
   // Save eligible products
   if (data.eligibleProducts && Array.isArray(data.eligibleProducts)) {
-    const productRows = data.eligibleProducts.map((p) => ({
-      boxId: box.id,
-      productId: p.productId || p.id,
-      productTitle: p.productTitle || p.title || null,
-      productImageUrl: p.productImageUrl || p.imageUrl || null,
-      productHandle: p.productHandle || p.handle || null,
-      productPrice: p.price != null && parseFloat(p.price) > 0 ? parseFloat(p.price) : null,
-    }));
+    const productRows = data.eligibleProducts.map((p) => {
+      const rawIds = Array.isArray(p.variantIds) ? p.variantIds : [];
+      const numericIds = rawIds.map((id) => (typeof id === 'string' && id.includes('/') ? id.split('/').pop() : String(id)));
+      return {
+        boxId: box.id,
+        productId: p.productId || p.id,
+        productTitle: p.productTitle || p.title || null,
+        productImageUrl: p.productImageUrl || p.imageUrl || null,
+        productHandle: p.productHandle || p.handle || null,
+        productPrice: p.price != null && parseFloat(p.price) > 0 ? parseFloat(p.price) : null,
+        variantIds: numericIds.length > 0 ? JSON.stringify(numericIds) : null,
+      };
+    });
     if (productRows.length > 0) {
       await db.comboBoxProduct.createMany({ data: productRows });
     }
@@ -276,14 +281,19 @@ export async function updateBox(id, shop, data, admin) {
   // Replace eligible products if provided
   if (data.eligibleProducts && Array.isArray(data.eligibleProducts)) {
     await db.comboBoxProduct.deleteMany({ where: { boxId: parseInt(id) } });
-    const productRows = data.eligibleProducts.map((p) => ({
-      boxId: parseInt(id),
-      productId: p.productId || p.id,
-      productTitle: p.productTitle || p.title || null,
-      productImageUrl: p.productImageUrl || p.imageUrl || null,
-      productHandle: p.productHandle || p.handle || null,
-      productPrice: p.price != null && parseFloat(p.price) > 0 ? parseFloat(p.price) : null,
-    }));
+    const productRows = data.eligibleProducts.map((p) => {
+      const rawIds = Array.isArray(p.variantIds) ? p.variantIds : [];
+      const numericIds = rawIds.map((id) => (typeof id === 'string' && id.includes('/') ? id.split('/').pop() : String(id)));
+      return {
+        boxId: parseInt(id),
+        productId: p.productId || p.id,
+        productTitle: p.productTitle || p.title || null,
+        productImageUrl: p.productImageUrl || p.imageUrl || null,
+        productHandle: p.productHandle || p.handle || null,
+        productPrice: p.price != null && parseFloat(p.price) > 0 ? parseFloat(p.price) : null,
+        variantIds: numericIds.length > 0 ? JSON.stringify(numericIds) : null,
+      };
+    });
     if (productRows.length > 0) {
       await db.comboBoxProduct.createMany({ data: productRows });
     }
