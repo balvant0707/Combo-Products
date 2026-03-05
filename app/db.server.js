@@ -13,15 +13,22 @@ if (!/^mysqls?:\/\//i.test(normalizedDatabaseUrl)) {
   );
 }
 
-process.env.DATABASE_URL = normalizedDatabaseUrl;
+// In serverless (Vercel), append connection_limit=1 so each function instance
+// only holds 1 DB connection — prevents pool exhaustion under concurrent load.
+const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const dbUrl = isServerless
+  ? normalizedDatabaseUrl + (normalizedDatabaseUrl.includes('?') ? '&' : '?') + 'connection_limit=1&pool_timeout=20'
+  : normalizedDatabaseUrl;
 
-if (process.env.NODE_ENV !== "production") {
-  if (!global.prismaGlobal) {
-    global.prismaGlobal = new PrismaClient();
-  }
+process.env.DATABASE_URL = dbUrl;
+
+// Use globalThis singleton in ALL environments to avoid multiple client instances
+// within the same module cache (dev hot-reload or serverless warm containers).
+if (!globalThis.__prismaClient) {
+  globalThis.__prismaClient = new PrismaClient();
 }
 
-const prisma = global.prismaGlobal ?? new PrismaClient();
+const prisma = globalThis.__prismaClient;
 const prismaProvider = prisma?._engineConfig?.activeProvider;
 
 if (prismaProvider && prismaProvider !== "mysql") {
