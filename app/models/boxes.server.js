@@ -68,7 +68,7 @@ export async function listBoxes(shop, activeOnly = false, includeBannerBinary = 
   return boxes.map((box) => {
     const sanitized = { ...box };
     delete sanitized.bannerImageData;
-    delete sanitized.bannerImageMimeType;
+    // Keep bannerImageMimeType as a marker that a binary upload exists
     delete sanitized.bannerImageFileName;
     return sanitized;
   });

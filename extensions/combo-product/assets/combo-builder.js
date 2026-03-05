@@ -522,24 +522,26 @@
       // Gift message visibility
       if (giftSection) giftSection.style.display = allFilled ? 'block' : 'none';
 
-      // Sticky savings row (MRP strikethrough + Save badge)
+      // Sticky savings row — dynamic MRP (updates with each product selection)
       if (_stickySavingsEl) {
         var totalMrp = 0;
-        var mrpKnown = true;
+        var hasSelected = false;
         slots.forEach(function (p) {
-          if (p && p.productPrice != null && parseFloat(p.productPrice) > 0) {
-            totalMrp += parseFloat(p.productPrice);
-          } else if (p) {
-            mrpKnown = false;
+          if (p) {
+            hasSelected = true;
+            totalMrp += (p.productPrice != null && parseFloat(p.productPrice) > 0)
+              ? parseFloat(p.productPrice) : 0;
           }
         });
-        var showSavings = ctx.settings && ctx.settings.showSavingsBadge &&
-          allFilled && mrpKnown && totalMrp > parseFloat(box.bundlePrice);
-        if (showSavings) {
-          var savingsAmt = totalMrp - parseFloat(box.bundlePrice);
+        if (hasSelected) {
+          var bundlePrice = parseFloat(box.bundlePrice);
+          var savingsAmt = totalMrp - bundlePrice;
+          var savingsBadge = (ctx.settings && ctx.settings.showSavingsBadge && savingsAmt > 0)
+            ? '<span class="cb-sticky-save">Save ' + formatPrice(savingsAmt, ctx.currencySymbol) + '</span>'
+            : '';
           _stickySavingsEl.innerHTML =
             '<span class="cb-sticky-mrp">MRP: ' + formatPrice(totalMrp, ctx.currencySymbol) + '</span>' +
-            '<span class="cb-sticky-save">Save ' + formatPrice(savingsAmt, ctx.currencySymbol) + '</span>';
+            savingsBadge;
           _stickySavingsEl.style.display = 'flex';
         } else {
           _stickySavingsEl.style.display = 'none';
