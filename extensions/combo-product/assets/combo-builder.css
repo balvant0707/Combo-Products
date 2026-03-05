@@ -231,11 +231,12 @@
 /* ── Slot Steps Row ───────────────────────────────────── */
 .cb-slot-wrapper {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   overflow-x: auto;
-  padding: 20px 8px 32px;
+  padding: 24px 8px 36px;
   margin-bottom: 4px;
+  gap: 0;
 }
 
 .cb-slot-steps {
@@ -247,32 +248,32 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   position: relative;
 }
 
 /* The numbered dashed box */
 .cb-slot-step-num {
-  width: 76px;
-  height: 76px;
-  border: 2px dashed var(--cb-border-dashed);
-  border-radius: var(--cb-radius-sm);
+  width: 84px;
+  height: 84px;
+  border: 2.5px dashed #c9ccd0;
+  border-radius: 12px;
   background: var(--cb-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--cb-idle-num);
+  font-size: 28px;
+  font-weight: 800;
+  color: #c9ccd0;
   transition: all var(--cb-transition);
   overflow: hidden;
   font-family: var(--cb-font);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
 }
 
 .cb-slot-step--active .cb-slot-step-num {
   border-style: solid;
   border-color: var(--cb-primary);
+  border-width: 2.5px;
   background: var(--cb-primary-light);
   color: var(--cb-primary);
   box-shadow: 0 0 0 4px var(--cb-primary-glow);
@@ -286,7 +287,7 @@
 
 .cb-slot-step--filled .cb-slot-step-num {
   border-style: solid;
-  border-width: 2px;
+  border-width: 2.5px;
   border-color: var(--cb-primary);
   background: var(--cb-bg);
   color: var(--cb-primary);
@@ -309,23 +310,24 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: calc(var(--cb-radius-sm) - 2px);
+  border-radius: 10px;
 }
 
 /* Label below each step */
 .cb-slot-step-label {
   text-align: center;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .cb-slot-step-small {
   display: block;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--cb-text-muted);
   font-family: var(--cb-font);
 }
 
 .cb-slot-step-item {
+  display: block;
   font-size: 12px;
   font-weight: 700;
   color: var(--cb-text);
@@ -339,13 +341,13 @@
   cursor: pointer;
 }
 
-/* Dashed connector */
+/* Dashed connector — vertically centered on 84px box */
 .cb-slot-connector {
-  width: 32px;
+  width: 36px;
   height: 2px;
-  border-top: 2px dashed var(--cb-border-dashed);
+  border-top: 2.5px dashed #c9ccd0;
   align-self: flex-start;
-  margin-top: 37px;
+  margin-top: 41px;
   flex-shrink: 0;
 }
 
@@ -377,32 +379,35 @@
   box-shadow: 0 4px 10px rgba(239,68,68,0.35);
 }
 
+/* Arrow → vertically centered on 84px box */
 .cb-slot-arrow {
-  font-size: 22px;
-  color: var(--cb-text-muted);
-  margin: 0 12px;
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--cb-text);
   flex-shrink: 0;
   align-self: flex-start;
-  margin-top: 26px;
+  margin: 0 10px;
+  margin-top: 30px;
+  line-height: 1;
 }
 
-/* Inline ADD TO CART in slot row */
+/* Inline ADD TO CART in slot row — centered on 84px box */
 .cb-inline-cart-btn {
-  padding: 12px 22px;
+  padding: 13px 24px;
   border-radius: var(--cb-radius-sm);
   border: none;
-  font-size: var(--cb-btn-font-size);
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.6px;
   text-transform: uppercase;
   cursor: not-allowed;
-  background: #d1d5db;
-  color: #9ca3af;
+  background: #9ca3af;
+  color: #fff;
   transition: all var(--cb-transition);
   white-space: nowrap;
   flex-shrink: 0;
   align-self: flex-start;
-  margin-top: 19px;
+  margin-top: 21px;
   font-family: var(--cb-font);
 }
 
@@ -663,6 +668,16 @@
   background: var(--cb-success);
 }
 
+.cb-add-btn--remove {
+  background: var(--cb-primary);
+  color: #fff;
+  cursor: pointer;
+}
+
+.cb-add-btn--remove:hover {
+  background: var(--cb-error);
+}
+
 /* List layout overrides */
 .cb-product-list .cb-product-card {
   flex-direction: row;
@@ -743,9 +758,18 @@
   font-family: var(--cb-font);
 }
 
+.cb-sticky-center {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
 .cb-sticky-total {
-  font-size: 13px;
-  color: var(--cb-text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cb-text);
   white-space: nowrap;
   font-family: var(--cb-font);
 }
@@ -753,7 +777,33 @@
 .cb-sticky-price {
   font-weight: 800;
   color: var(--cb-primary);
-  font-size: 17px;
+  font-size: 18px;
+}
+
+.cb-sticky-savings-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cb-sticky-mrp {
+  font-size: 12px;
+  color: var(--cb-error);
+  text-decoration: line-through;
+  font-family: var(--cb-font);
+}
+
+.cb-sticky-save {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cb-success);
+  background: color-mix(in srgb, var(--cb-success) 12%, #fff);
+  border: 1px solid color-mix(in srgb, var(--cb-success) 25%, transparent);
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-family: var(--cb-font);
+  white-space: nowrap;
 }
 
 .cb-sticky-progress {
@@ -839,7 +889,7 @@
   .cb-box-card { width: 220px; }
   .cb-box-banner { height: 160px; }
   .cb-product-grid { grid-template-columns: repeat(2, 1fr); }
-  .cb-slot-connector { width: 20px; }
+  .cb-slot-connector { width: 22px; margin-top: 41px; }
   .cb-sticky-footer { padding: 10px 16px; }
   .cb-sticky-name { font-size: 13px; }
   .cb-sticky-progress { display: none; }
@@ -851,10 +901,10 @@
   .cb-box-banner { height: 130px; }
   .cb-box-buy-text, .cb-box-price-text { font-size: 13px; }
   .cb-product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .cb-slot-step-num { width: 60px; height: 60px; font-size: 22px; }
-  .cb-slot-connector { width: 14px; margin-top: 29px; }
-  .cb-slot-arrow { margin: 0 6px; margin-top: 18px; font-size: 18px; }
-  .cb-inline-cart-btn { padding: 10px 14px; font-size: 11px; }
+  .cb-slot-step-num { width: 64px; height: 64px; font-size: 22px; }
+  .cb-slot-connector { width: 16px; margin-top: 31px; }
+  .cb-slot-arrow { margin: 0 6px; margin-top: 20px; font-size: 18px; }
+  .cb-inline-cart-btn { padding: 10px 14px; font-size: 11px; margin-top: 13px; }
   .cb-sticky-footer { flex-wrap: wrap; padding: 10px 14px; gap: 8px; }
   .cb-sticky-btn { width: 100%; text-align: center; }
 }

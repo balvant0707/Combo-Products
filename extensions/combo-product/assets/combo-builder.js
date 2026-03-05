@@ -71,6 +71,7 @@
   // ─── Sticky Footer singleton ──────────────────────────────────────────────────
   var _stickyEl = null;
   var _stickyBtn = null;
+  var _stickySavingsEl = null;
 
   function removeStickyFooter() {
     if (_stickyEl && _stickyEl.parentNode) {
@@ -79,6 +80,7 @@
     }
     _stickyEl = null;
     _stickyBtn = null;
+    _stickySavingsEl = null;
   }
 
   function createStickyFooter(box, ctx, onCartClick) {
@@ -107,11 +109,19 @@
     left.appendChild(nameEl);
     footer.appendChild(left);
 
-    // Center: total price
+    // Center: total price + MRP savings
     var center = document.createElement('div');
-    center.className = 'cb-sticky-total';
-    center.innerHTML = 'Total <span class="cb-sticky-price">' + formatPrice(box.bundlePrice, ctx.currencySymbol) + '/-</span>';
+    center.className = 'cb-sticky-center';
+    var totalRow = document.createElement('div');
+    totalRow.className = 'cb-sticky-total';
+    totalRow.innerHTML = 'Total <span class="cb-sticky-price">' + formatPrice(box.bundlePrice, ctx.currencySymbol) + '/-</span>';
+    center.appendChild(totalRow);
+    var savingsRow = document.createElement('div');
+    savingsRow.className = 'cb-sticky-savings-row';
+    savingsRow.style.display = 'none';
+    center.appendChild(savingsRow);
     footer.appendChild(center);
+    _stickySavingsEl = savingsRow;
 
     // Right: ADD TO CART button
     var btn = document.createElement('button');
@@ -511,6 +521,30 @@
 
       // Gift message visibility
       if (giftSection) giftSection.style.display = allFilled ? 'block' : 'none';
+
+      // Sticky savings row (MRP strikethrough + Save badge)
+      if (_stickySavingsEl) {
+        var totalMrp = 0;
+        var mrpKnown = true;
+        slots.forEach(function (p) {
+          if (p && p.productPrice != null && parseFloat(p.productPrice) > 0) {
+            totalMrp += parseFloat(p.productPrice);
+          } else if (p) {
+            mrpKnown = false;
+          }
+        });
+        var showSavings = ctx.settings && ctx.settings.showSavingsBadge &&
+          allFilled && mrpKnown && totalMrp > parseFloat(box.bundlePrice);
+        if (showSavings) {
+          var savingsAmt = totalMrp - parseFloat(box.bundlePrice);
+          _stickySavingsEl.innerHTML =
+            '<span class="cb-sticky-mrp">MRP: ' + formatPrice(totalMrp, ctx.currencySymbol) + '</span>' +
+            '<span class="cb-sticky-save">Save ' + formatPrice(savingsAmt, ctx.currencySymbol) + '</span>';
+          _stickySavingsEl.style.display = 'flex';
+        } else {
+          _stickySavingsEl.style.display = 'none';
+        }
+      }
     }
 
     // ── Product Grid ──
@@ -602,13 +636,16 @@
 
         card.appendChild(infoEl);
 
-        // ADD TO BOX button
+        // ADD TO BOX / REMOVE FROM BOX button
         var addBtn = document.createElement('button');
         addBtn.type = 'button';
         if (isUsed) {
           addBtn.className = 'cb-add-btn cb-add-btn--used';
           addBtn.innerHTML = '&#10003; Added';
           addBtn.disabled = true;
+        } else if (isCurrentSlot) {
+          addBtn.className = 'cb-add-btn cb-add-btn--remove';
+          addBtn.innerHTML = '&times; REMOVE FROM BOX';
         } else {
           addBtn.className = 'cb-add-btn';
           addBtn.innerHTML = '+ ADD TO BOX';
@@ -616,7 +653,22 @@
 
         card.appendChild(addBtn);
 
-        if (!isUsed) {
+        if (isCurrentSlot) {
+          ;(function (aBtn) {
+            function onRemove(e) {
+              e.stopPropagation();
+              slots[activeSlotIndex] = null;
+              renderSlots();
+              renderProductGrid();
+              updateCartButton();
+            }
+            aBtn.addEventListener('click', onRemove);
+            card.addEventListener('click', onRemove);
+            card.addEventListener('keydown', function (e) {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRemove(e); }
+            });
+          })(addBtn);
+        } else if (!isUsed) {
           ;(function (p, aBtn) {
             function onProductClick() {
               slots[activeSlotIndex] = p;
@@ -717,16 +769,16 @@
     });
 
     if (box.shopifyVariantId) {
-      items.push({
-        id: box.shopifyVariantId,
-        quantity: 1,
-        properties: {
-          '_bundle_price_item': 'true',
-          '_combo_session_id': sessionId,
-          '_combo_box_id': String(box.id),
-          'Bundle': box.displayTitle,
-        },
+      var bundleProps = {
+        '_bundle_price_item': 'true',
+        '_combo_session_id': sessionId,
+        '_combo_box_id': String(box.id),
+        'Bundle': box.displayTitle,
+      };
+      slots.forEach(function (p, idx) {
+        if (p) bundleProps['Item ' + (idx + 1)] = p.productTitle || ('Item ' + (idx + 1));
       });
+      items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
     }
 
     if (items.length === 0) {
