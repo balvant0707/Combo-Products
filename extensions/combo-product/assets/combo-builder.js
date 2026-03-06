@@ -954,7 +954,9 @@
           'Bundle': box.displayTitle,
         };
         if (box.bannerImageUrl) props['_combo_box_image'] = box.bannerImageUrl;
-        props['_item_' + (idx + 1)] = product.productId;
+        var itemLabel = product.productTitle || ('Item ' + (idx + 1));
+        if (product.selectedVariantTitle) itemLabel += ' (' + product.selectedVariantTitle + ')';
+        props['Item ' + (idx + 1)] = itemLabel;
         if (giftMessage) props['Gift Message'] = giftMessage;
         fallbackItems.push({ id: variantId, quantity: 1, properties: props });
       });
@@ -989,7 +991,11 @@
       };
       if (box.bannerImageUrl) bundleProps['_combo_box_image'] = box.bannerImageUrl;
       slots.forEach(function (p, idx) {
-        if (p) bundleProps['Item ' + (idx + 1)] = p.productTitle || ('Item ' + (idx + 1));
+        if (p) {
+          var label = p.productTitle || ('Item ' + (idx + 1));
+          if (p.selectedVariantTitle) label += ' (' + p.selectedVariantTitle + ')';
+          bundleProps['Item ' + (idx + 1)] = label;
+        }
       });
       if (giftMessage) bundleProps['Gift Message'] = giftMessage;
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
