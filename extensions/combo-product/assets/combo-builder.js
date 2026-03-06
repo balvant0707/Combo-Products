@@ -1200,8 +1200,8 @@
           if (items[0].properties) {
             items[0].properties['_combo_shopify_variant_id'] = String(variantId);
           }
-          // 600ms delay so Shopify can propagate the publication change
-          return new Promise(function (resolve) { setTimeout(resolve, 600); })
+          // 1500ms delay so Shopify can propagate the publication change
+          return new Promise(function (resolve) { setTimeout(resolve, 1500); })
             .then(function () {
               return isDynamic ? updateDynamicPriceThenCart() : postCartItems(items);
             });

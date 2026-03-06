@@ -71,15 +71,13 @@ async function ensureProductPublished(admin, productId) {
     console.warn("[variant-repair] activate error:", e);
   }
 
-  // Step 2: publish to every sales-channel publication (all entries that have a catalog).
-  // Matching by catalog title is fragile; publishing to all catalog-based channels is safe.
+  // Step 2: publish to every publication including Online Store (catalog is null for Online Store).
   try {
     const pubResp = await admin.graphql(GET_PUBLICATIONS_QUERY);
     const pubJson = await pubResp.json();
     const edges = pubJson?.data?.publications?.edges || [];
-    const salesChannelIds = edges
-      .filter((e) => e?.node?.catalog != null)
-      .map((e) => ({ publicationId: e.node.id }));
+    // Publish to ALL publications — Online Store has catalog: null so must not filter
+    const salesChannelIds = edges.map((e) => ({ publicationId: e.node.id }));
 
     if (salesChannelIds.length > 0) {
       await admin.graphql(PUBLISH_PRODUCT_MUTATION, {
