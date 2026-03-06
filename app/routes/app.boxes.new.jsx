@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useLoaderData, useNavigate, useFetcher, Form, useActionData, useNavigation } from "react-router";
+import { useLoaderData, useFetcher, Form, useActionData, useNavigation } from "react-router";
 import { redirect } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -273,8 +273,7 @@ function PriceChart({ estimatedTotal, bundlePrice, numItemCount }) {
 export default function CreateBoxPage() {
   const { products } = useLoaderData();
   const actionData = useActionData();
-  const navigate = useNavigate();
-  const searchFetcher = useFetcher();
+const searchFetcher = useFetcher();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
 
@@ -375,16 +374,7 @@ export default function CreateBoxPage() {
   };
 
   return (
-    <s-page heading="Create New Box Type">
-      {/* Header — Cancel (secondary) */}
-      <s-button
-        slot="secondary-action"
-        variant="tertiary"
-        onClick={() => navigate("/app/boxes")}
-      >
-        Cancel
-      </s-button>
-
+    <s-page heading="Create New Box Type" back-url="/app/boxes">
       {/* Header — Save (primary) */}
       <s-button
         slot="primary-action"
