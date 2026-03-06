@@ -1,6 +1,6 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "1b140d390cfb4675876a63a4cc03aab7"
+client_id = "335f2a536c3bcb46c4450e5ecaa080b1"
 name = "Combo Product"
 application_url = "https://combo-products.vercel.app"
 embedded = true
