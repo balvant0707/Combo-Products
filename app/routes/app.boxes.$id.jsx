@@ -384,47 +384,26 @@ export default function EditBoxPage() {
   return (
     <s-page heading={`Edit: ${box.boxName}`}>
       {/* Header — Cancel (secondary) */}
-      <button
+      <s-button
         slot="secondary-action"
-        type="button"
+        variant="tertiary"
         onClick={() => navigate("/app/boxes")}
-        style={{
-          background: "#fff",
-          border: "1.5px solid #d1d5db",
-          borderRadius: "5px",
-          padding: "8px 18px",
-          fontSize: "13px",
-          fontWeight: "500",
-          cursor: "pointer",
-          color: "#374151",
-        }}
       >
         Cancel
-      </button>
+      </s-button>
 
       {/* Header — Save Changes (primary) */}
-      <button
+      <s-button
         slot="primary-action"
-        type="submit"
-        form="edit-box-form"
-        name="_action"
-        value="save"
-        disabled={isSaving}
-        style={{
-          background: isSaving ? "#9ca3af" : "#2A7A4F",
-          border: "none",
-          borderRadius: "5px",
-          padding: "8px 20px",
-          fontSize: "13px",
-          fontWeight: "700",
-          cursor: isSaving ? "not-allowed" : "pointer",
-          color: "#fff",
-          letterSpacing: "0.3px",
-          boxShadow: isSaving ? "none" : "0 1px 6px rgba(42,122,79,0.35)",
+        variant="primary"
+        disabled={isSaving || undefined}
+        onClick={() => {
+          const form = document.getElementById("edit-box-form");
+          if (form) form.requestSubmit();
         }}
       >
         {isSaving ? "Saving..." : "Save Changes"}
-      </button>
+      </s-button>
 
       {errors._global && (
         <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "5px", padding: "12px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
@@ -435,6 +414,7 @@ export default function EditBoxPage() {
 
       <s-section>
         <Form id="edit-box-form" method="POST" encType="multipart/form-data">
+          <input type="hidden" name="_action" value="save" />
           <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
           <input type="hidden" name="itemCount" value={itemCount} />
           <input type="hidden" name="eligibleProducts" value={JSON.stringify(selectedProducts)} />
@@ -744,32 +724,34 @@ export default function EditBoxPage() {
             </button>
           </div>
 
+        </Form>
+
           {/* ── Delete Action ── */}
           <div style={{ paddingTop: "18px", borderTop: "1.5px solid #f3f4f6" }}>
-            <button
-              type="submit"
-              name="_action"
-              value="delete"
-              onClick={(e) => {
-                if (!window.confirm(`Delete "${box.boxName}"? This cannot be undone.`)) e.preventDefault();
-              }}
-              style={{
-                background: "#fff5f5",
-                border: "1.5px solid #fecaca",
-                borderRadius: "5px",
-                padding: "9px 18px",
-                fontSize: "13px",
-                fontWeight: "500",
-                cursor: "pointer",
-                color: "#dc2626",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#fee2e2")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "#fff5f5")}
-            >
-              Delete Box
-            </button>
+            <Form method="POST" id="delete-box-form">
+              <input type="hidden" name="_action" value="delete" />
+              <button
+                type="submit"
+                onClick={(e) => {
+                  if (!window.confirm(`Delete "${box.boxName}"? This cannot be undone.`)) e.preventDefault();
+                }}
+                style={{
+                  background: "#fff5f5",
+                  border: "1.5px solid #fecaca",
+                  borderRadius: "5px",
+                  padding: "9px 18px",
+                  fontSize: "13px",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  color: "#dc2626",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#fee2e2")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#fff5f5")}
+              >
+                Delete Box
+              </button>
+            </Form>
           </div>
-        </Form>
       </s-section>
 
       {/* ── Product Picker Modal ── */}
