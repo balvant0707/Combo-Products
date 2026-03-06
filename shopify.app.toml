@@ -38,7 +38,7 @@ api_version = "2026-04"
 
 
 [access_scopes]
-scopes = "write_products,read_products,read_orders,read_inventory,read_themes,write_themes"
+scopes = "write_products,read_products,read_orders,read_inventory,read_themes,write_themes,read_publications,write_publications"
 
 [auth]
 redirect_urls = [
