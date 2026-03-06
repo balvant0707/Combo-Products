@@ -915,7 +915,8 @@
           giftInput ? giftInput.value : null,
           inlineCartBtn,
           _stickyBtn,
-          resolveAddToCartLabel(ctx.settings)
+          resolveAddToCartLabel(ctx.settings),
+          ctx.currencySymbol
         );
       });
     }
@@ -929,8 +930,9 @@
 
   // ─── Add to Cart ──────────────────────────────────────────────────────────────
 
-  function addToCart(box, slots, sessionId, giftMessage, inlineBtn, stickyBtn, readyLabel) {
+  function addToCart(box, slots, sessionId, giftMessage, inlineBtn, stickyBtn, readyLabel, currencySymbol) {
     var resolvedReadyLabel = readyLabel || 'UPDATE BOX';
+    var resolvedCurrencySymbol = currencySymbol || '\u20B9';
     var sectionIds = ['cart-drawer', 'cart-icon-bubble', 'cart-notification-button', 'cart-notification'];
 
     function setBtns(state, text) {
@@ -1074,11 +1076,13 @@
     if (box.shopifyVariantId) {
       // PRIMARY: Add only the bundle pricing product with selected products as properties.
       // This ensures cart total = bundle price (not sum of individual prices).
+      var bundlePrice = parseFloat(box.bundlePrice) || 0;
       var bundleProps = {
         '_bundle_price_item': 'true',
         '_combo_session_id': sessionId,
         '_combo_box_id': String(box.id),
         'Bundle': box.displayTitle,
+        'Combo Price': formatPrice(bundlePrice, resolvedCurrencySymbol),
       };
       if (box.bannerImageUrl) bundleProps['_combo_box_image'] = box.bannerImageUrl;
       var totalMrp = 0;
@@ -1092,13 +1096,23 @@
           }
         }
       });
-      var bundlePrice = parseFloat(box.bundlePrice);
-      if (totalMrp > bundlePrice) {
+
+      if (totalMrp > 0) {
+        bundleProps['_combo_selected_total'] = totalMrp.toFixed(2);
+        bundleProps['_combo_bundle_price'] = bundlePrice.toFixed(2);
+        bundleProps['Selected Items Total'] = formatPrice(totalMrp, resolvedCurrencySymbol);
+        bundleProps['MRP'] = formatPrice(totalMrp, resolvedCurrencySymbol);
+      }
+
+      if (totalMrp > bundlePrice && totalMrp > 0) {
         var savingsAmt = totalMrp - bundlePrice;
         var savingsPct = Math.round((savingsAmt / totalMrp) * 100);
-        bundleProps['MRP'] = formatPrice(totalMrp, ctx.currencySymbol);
-        bundleProps['You Save'] = formatPrice(savingsAmt, ctx.currencySymbol) + ' (' + savingsPct + '% OFF)';
+        bundleProps['_combo_savings_amount'] = savingsAmt.toFixed(2);
+        bundleProps['_combo_discount_pct'] = String(savingsPct);
+        bundleProps['You Save'] = formatPrice(savingsAmt, resolvedCurrencySymbol) + ' (' + savingsPct + '% OFF)';
+        bundleProps['Discount'] = savingsPct + '% OFF';
       }
+
       if (giftMessage) bundleProps['Gift Message'] = giftMessage;
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
     } else {
