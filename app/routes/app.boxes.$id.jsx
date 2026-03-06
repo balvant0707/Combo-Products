@@ -383,46 +383,48 @@ export default function EditBoxPage() {
 
   return (
     <s-page heading={`Edit: ${box.boxName}`}>
-      {/* Header actions — Cancel + Save */}
-      <div slot="primary-action" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-        <button
-          type="button"
-          onClick={() => navigate("/app/boxes")}
-          style={{
-            background: "#fff",
-            border: "1.5px solid #d1d5db",
-            borderRadius: "5px",
-            padding: "8px 18px",
-            fontSize: "13px",
-            fontWeight: "500",
-            cursor: "pointer",
-            color: "#374151",
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          form="edit-box-form"
-          name="_action"
-          value="save"
-          disabled={isSaving}
-          style={{
-            background: isSaving ? "#9ca3af" : "#2A7A4F",
-            border: "none",
-            borderRadius: "5px",
-            padding: "8px 20px",
-            fontSize: "13px",
-            fontWeight: "700",
-            cursor: isSaving ? "not-allowed" : "pointer",
-            color: "#fff",
-            letterSpacing: "0.3px",
-            boxShadow: isSaving ? "none" : "0 1px 6px rgba(42,122,79,0.35)",
-          }}
-        >
-          {isSaving ? "Saving..." : "Save Changes"}
-        </button>
-      </div>
+      {/* Header — Cancel (secondary) */}
+      <button
+        slot="secondary-action"
+        type="button"
+        onClick={() => navigate("/app/boxes")}
+        style={{
+          background: "#fff",
+          border: "1.5px solid #d1d5db",
+          borderRadius: "5px",
+          padding: "8px 18px",
+          fontSize: "13px",
+          fontWeight: "500",
+          cursor: "pointer",
+          color: "#374151",
+        }}
+      >
+        Cancel
+      </button>
+
+      {/* Header — Save Changes (primary) */}
+      <button
+        slot="primary-action"
+        type="submit"
+        form="edit-box-form"
+        name="_action"
+        value="save"
+        disabled={isSaving}
+        style={{
+          background: isSaving ? "#9ca3af" : "#2A7A4F",
+          border: "none",
+          borderRadius: "5px",
+          padding: "8px 20px",
+          fontSize: "13px",
+          fontWeight: "700",
+          cursor: isSaving ? "not-allowed" : "pointer",
+          color: "#fff",
+          letterSpacing: "0.3px",
+          boxShadow: isSaving ? "none" : "0 1px 6px rgba(42,122,79,0.35)",
+        }}
+      >
+        {isSaving ? "Saving..." : "Save Changes"}
+      </button>
 
       {errors._global && (
         <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "5px", padding: "12px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
