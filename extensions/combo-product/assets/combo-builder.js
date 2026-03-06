@@ -916,7 +916,9 @@
           inlineCartBtn,
           _stickyBtn,
           resolveAddToCartLabel(ctx.settings),
-          ctx.currencySymbol
+          ctx.currencySymbol,
+          ctx.apiBase,
+          ctx.shop
         );
       });
     }
@@ -930,7 +932,7 @@
 
   // ─── Add to Cart ──────────────────────────────────────────────────────────────
 
-  function addToCart(box, slots, sessionId, giftMessage, inlineBtn, stickyBtn, readyLabel, currencySymbol) {
+  function addToCart(box, slots, sessionId, giftMessage, inlineBtn, stickyBtn, readyLabel, currencySymbol, apiBase, shop) {
     var resolvedReadyLabel = readyLabel || 'UPDATE BOX';
     var resolvedCurrencySymbol = currencySymbol || '\u20B9';
     var sectionIds = ['cart-drawer', 'cart-icon-bubble', 'cart-notification-button', 'cart-notification'];
@@ -972,6 +974,33 @@
         });
         return r.json();
       });
+    }
+
+    function resolveBundleVariantId() {
+      var resolvedApiBase = String(apiBase || DEFAULT_API_BASE || '').replace(/\/+$/, '');
+      if (!box || !box.id || !shop || !box.shopifyProductId || !resolvedApiBase) {
+        return Promise.reject(new Error('Cannot resolve combo variant'));
+      }
+
+      return fetch(
+        resolvedApiBase +
+          '/api/storefront/boxes/' +
+          encodeURIComponent(String(box.id)) +
+          '/variant?shop=' +
+          encodeURIComponent(shop),
+        { headers: { 'Accept': 'application/json' } }
+      )
+        .then(function (r) {
+          if (!r.ok) throw new Error('Variant repair failed');
+          return r.json();
+        })
+        .then(function (data) {
+          if (!data || !data.shopifyVariantId) {
+            throw new Error('Variant repair failed');
+          }
+          box.shopifyVariantId = String(data.shopifyVariantId);
+          return box.shopifyVariantId;
+        });
     }
 
     function syncThemeCartUI(cartResponse) {
@@ -1106,6 +1135,18 @@
     }
 
     postCartItems(items)
+      .catch(function (err) {
+        var msg = err && err.message ? String(err.message).toLowerCase() : '';
+        if (msg.indexOf('cannot find variant') === -1) throw err;
+
+        return resolveBundleVariantId().then(function (variantId) {
+          items[0].id = variantId;
+          if (items[0].properties) {
+            items[0].properties['_combo_shopify_variant_id'] = String(variantId);
+          }
+          return postCartItems(items);
+        });
+      })
       .then(function (cartResponse) {
         setBtns('success', 'Added to Cart! ✓');
 
