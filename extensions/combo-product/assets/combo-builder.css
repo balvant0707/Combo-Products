@@ -252,7 +252,6 @@
 
 /* ── Builder Area ─────────────────────────────────────── */
 .cb-builder-area {
-  background: var(--cb-bg);
   border-radius: var(--cb-radius);
   animation: cb-fade-in 0.24s ease;
 }
@@ -951,6 +950,88 @@
   color: #fff;
   cursor: pointer;
 }
+
+/* ── Variant Picker ───────────────────────────────────── */
+.cb-product-card--picking {
+  cursor: default !important;
+}
+
+.cb-product-card--picking:hover {
+  transform: none !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+}
+
+.cb-variant-picker {
+  padding: 10px 12px 12px;
+  border-top: 1.5px solid var(--cb-border);
+  background: var(--cb-bg);
+  animation: cb-fade-in 0.15s ease;
+}
+
+.cb-variant-picker-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--cb-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+  font-family: var(--cb-font);
+}
+
+.cb-variant-picker-loading {
+  font-size: 12px;
+  color: var(--cb-text-muted);
+  font-family: var(--cb-font);
+}
+
+.cb-variant-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.cb-variant-btn {
+  padding: 5px 12px;
+  border: 1.5px solid var(--cb-primary);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--cb-primary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--cb-font);
+  transition: background var(--cb-transition), color var(--cb-transition);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.cb-variant-btn:hover:not(:disabled) {
+  background: var(--cb-primary);
+  color: #fff;
+}
+
+.cb-variant-btn--oos {
+  border-color: var(--cb-border);
+  color: var(--cb-text-muted);
+  opacity: 0.55;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.cb-variant-cancel-btn {
+  display: block;
+  font-size: 11px;
+  color: var(--cb-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+  font-family: var(--cb-font);
+  text-decoration: underline;
+}
+
+.cb-variant-cancel-btn:hover { color: var(--cb-error); }
 
 /* ── Responsive ───────────────────────────────────────── */
 

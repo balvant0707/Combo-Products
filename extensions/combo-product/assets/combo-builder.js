@@ -76,6 +76,93 @@
     document.body.appendChild(style);
   }
 
+  // ─── Variant Cache + Picker ───────────────────────────────────────────────────
+
+  var variantCache = {};
+
+  function fetchVariants(handle, allowedVariantIds, cb) {
+    if (variantCache[handle]) { cb(null, variantCache[handle]); return; }
+    fetch('/products/' + handle + '.js')
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var all = (data.variants || []).map(function (v) {
+          return { id: String(v.id), title: v.title, available: v.available };
+        });
+        if (allowedVariantIds && allowedVariantIds.length > 0) {
+          var allowed = allowedVariantIds.map(String);
+          all = all.filter(function (v) { return allowed.indexOf(v.id) !== -1; });
+        }
+        variantCache[handle] = all;
+        cb(null, all);
+      })
+      .catch(function (e) { cb(e, null); });
+  }
+
+  function showVariantPicker(card, product, addBtn, cb) {
+    addBtn.style.display = 'none';
+
+    var picker = document.createElement('div');
+    picker.className = 'cb-variant-picker';
+    card.insertBefore(picker, addBtn);
+    card.classList.add('cb-product-card--picking');
+
+    var titleEl = document.createElement('div');
+    titleEl.className = 'cb-variant-picker-title';
+    titleEl.textContent = 'Select option:';
+    picker.appendChild(titleEl);
+
+    var loadingEl = document.createElement('span');
+    loadingEl.className = 'cb-variant-picker-loading';
+    loadingEl.textContent = 'Loading…';
+    picker.appendChild(loadingEl);
+
+    function closePicker() {
+      card.classList.remove('cb-product-card--picking');
+      if (picker.parentNode) picker.parentNode.removeChild(picker);
+      addBtn.style.display = '';
+    }
+
+    fetchVariants(product.productHandle, product.variantIds, function (err, variants) {
+      if (picker.contains(loadingEl)) picker.removeChild(loadingEl);
+
+      if (err || !variants || variants.length === 0) {
+        closePicker();
+        cb(product.variantIds && product.variantIds[0] ? product.variantIds[0] : null, '');
+        return;
+      }
+
+      if (variants.length === 1) {
+        closePicker();
+        cb(variants[0].id, variants[0].title !== 'Default Title' ? variants[0].title : '');
+        return;
+      }
+
+      var btnsDiv = document.createElement('div');
+      btnsDiv.className = 'cb-variant-btns';
+      variants.forEach(function (v) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'cb-variant-btn' + (!v.available ? ' cb-variant-btn--oos' : '');
+        btn.textContent = v.title;
+        if (!v.available) { btn.disabled = true; btn.title = 'Out of stock'; }
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          closePicker();
+          cb(v.id, v.title !== 'Default Title' ? v.title : '');
+        });
+        btnsDiv.appendChild(btn);
+      });
+      picker.appendChild(btnsDiv);
+
+      var cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.className = 'cb-variant-cancel-btn';
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.addEventListener('click', function (e) { e.stopPropagation(); closePicker(); });
+      picker.appendChild(cancelBtn);
+    });
+  }
+
   // ─── Sticky Footer singleton ──────────────────────────────────────────────────
   var _stickyEl = null;
   var _stickyBtn = null;
@@ -451,7 +538,8 @@
         itemLink.className = 'cb-slot-step-item';
         if (slotProduct) {
           var shortTitle = slotProduct.productTitle || ('Item ' + (idx + 1));
-          itemLink.textContent = shortTitle.length > 14 ? shortTitle.slice(0, 13) + '…' : shortTitle;
+          if (slotProduct.selectedVariantTitle) shortTitle += ' · ' + slotProduct.selectedVariantTitle;
+          itemLink.textContent = shortTitle.length > 16 ? shortTitle.slice(0, 15) + '…' : shortTitle;
           itemLink.classList.add('cb-slot-step-item--filled');
           // Click to change slot
           ;(function (i) {
@@ -723,11 +811,21 @@
           })(addBtn);
         } else if (!isUsed) {
           ;(function (p, aBtn) {
-            function onProductClick() {
-              slots[activeSlotIndex] = p;
-
+            function doAddToSlot(variantId, variantTitle) {
               aBtn.innerHTML = '&#10003; Added';
               aBtn.classList.add('cb-add-btn--added');
+
+              slots[activeSlotIndex] = {
+                productId: p.productId,
+                productTitle: p.productTitle,
+                productImageUrl: p.productImageUrl,
+                productHandle: p.productHandle,
+                productPrice: p.productPrice,
+                variantIds: p.variantIds,
+                isCollection: p.isCollection,
+                selectedVariantId: variantId || null,
+                selectedVariantTitle: variantTitle || null,
+              };
 
               var next = -1;
               for (var i = activeSlotIndex + 1; i < slots.length; i++) {
@@ -743,6 +841,17 @@
               renderSlots();
               renderProductGrid();
               updateCartButton();
+            }
+
+            function onProductClick() {
+              var needsPicker = !p.isCollection && p.productHandle && p.variantIds.length !== 1;
+              if (needsPicker) {
+                showVariantPicker(card, p, aBtn, function (variantId, variantTitle) {
+                  doAddToSlot(variantId, variantTitle);
+                });
+              } else {
+                doAddToSlot(p.variantIds[0] || null, null);
+              }
             }
 
             aBtn.addEventListener('click', function (e) { e.stopPropagation(); onProductClick(); });
@@ -922,6 +1031,7 @@
 
   function getFirstVariantId(product) {
     if (!product) return null;
+    if (product.selectedVariantId) return product.selectedVariantId;
     if (product.variantIds && Array.isArray(product.variantIds) && product.variantIds.length > 0) {
       return product.variantIds[0];
     }
