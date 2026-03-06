@@ -957,6 +957,20 @@
     setBtns('loading', 'Adding…');
 
     function buildFallbackItems() {
+      var selectedLabels = [];
+      var totalMrp = 0;
+      var bundlePrice = parseFloat(box.bundlePrice) || 0;
+
+      slots.forEach(function (p, idx) {
+        if (!p) return;
+        var label = p.productTitle || ('Item ' + (idx + 1));
+        if (p.selectedVariantTitle) label += ' (' + p.selectedVariantTitle + ')';
+        selectedLabels[idx] = label;
+        if (p.productPrice != null && parseFloat(p.productPrice) > 0) {
+          totalMrp += parseFloat(p.productPrice);
+        }
+      });
+
       var fallbackItems = [];
       slots.forEach(function (product, idx) {
         var variantId = getFirstVariantId(product);
@@ -965,11 +979,30 @@
           '_combo_box_id': String(box.id),
           '_combo_session_id': sessionId,
           'Bundle': box.displayTitle,
+          'Combo Price': formatPrice(bundlePrice, resolvedCurrencySymbol),
         };
         if (box.bannerImageUrl) props['_combo_box_image'] = box.bannerImageUrl;
-        var itemLabel = product.productTitle || ('Item ' + (idx + 1));
-        if (product.selectedVariantTitle) itemLabel += ' (' + product.selectedVariantTitle + ')';
-        props['Item ' + (idx + 1)] = itemLabel;
+
+        selectedLabels.forEach(function (label, labelIdx) {
+          if (label) props['Item ' + (labelIdx + 1)] = label;
+        });
+
+        if (totalMrp > 0) {
+          props['_combo_selected_total'] = totalMrp.toFixed(2);
+          props['_combo_bundle_price'] = bundlePrice.toFixed(2);
+          props['Selected Items Total'] = formatPrice(totalMrp, resolvedCurrencySymbol);
+          props['MRP'] = formatPrice(totalMrp, resolvedCurrencySymbol);
+        }
+
+        if (totalMrp > bundlePrice && totalMrp > 0) {
+          var savingsAmt = totalMrp - bundlePrice;
+          var savingsPct = Math.round((savingsAmt / totalMrp) * 100);
+          props['_combo_savings_amount'] = savingsAmt.toFixed(2);
+          props['_combo_discount_pct'] = String(savingsPct);
+          props['You Save'] = formatPrice(savingsAmt, resolvedCurrencySymbol) + ' (' + savingsPct + '% OFF)';
+          props['Discount'] = savingsPct + '% OFF';
+        }
+
         if (giftMessage) props['Gift Message'] = giftMessage;
         fallbackItems.push({ id: variantId, quantity: 1, properties: props });
       });
