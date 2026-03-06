@@ -20,7 +20,7 @@
     var label = settings && settings.addToCartLabel != null
       ? String(settings.addToCartLabel).trim()
       : '';
-    if (!label || label.toUpperCase() === 'ADD TO CART') return 'UPDATE BOX';
+    if (!label || label.toUpperCase() === 'ADD TO CART') return 'Add To Cart';
     return label;
   }
 
@@ -933,7 +933,7 @@
   // ─── Add to Cart ──────────────────────────────────────────────────────────────
 
   function addToCart(box, slots, sessionId, giftMessage, inlineBtn, stickyBtn, readyLabel, currencySymbol, apiBase, shop) {
-    var resolvedReadyLabel = readyLabel || 'UPDATE BOX';
+    var resolvedReadyLabel = readyLabel || 'Add To Cart';
     var resolvedCurrencySymbol = currencySymbol || '\u20B9';
     var sectionIds = ['cart-drawer', 'cart-icon-bubble', 'cart-notification-button', 'cart-notification'];
 

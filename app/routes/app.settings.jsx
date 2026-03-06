@@ -420,7 +420,7 @@ export default function SettingsPage() {
                 <input
                   type="text"
                   name="addToCartLabel"
-                  defaultValue={settings.addToCartLabel || "UPDATE BOX"}
+                  defaultValue={settings.addToCartLabel || "Add To Cart"}
                   style={inputStyle}
                 />
               </div>
