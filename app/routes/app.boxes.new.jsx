@@ -14,7 +14,7 @@ const PRODUCTS_QUERY = `#graphql
           title
           handle
           featuredImage { url }
-          variants(first: 1) {
+          variants(first: 100) {
             edges { node { id price } }
           }
         }
@@ -71,6 +71,7 @@ export const loader = async ({ request }) => {
     title: node.title,
     handle: node.handle,
     imageUrl: node.featuredImage?.url || null,
+    variantIds: (node.variants?.edges || []).map(({ node: variantNode }) => variantNode.id),
     variantId: node.variants?.edges?.[0]?.node?.id || null,
     price: node.variants?.edges?.[0]?.node?.price || "0",
   }));
@@ -335,7 +336,10 @@ const searchFetcher = useFetcher();
           productTitle: product.title,
           productImageUrl: product.imageUrl,
           productHandle: product.handle,
-          variantIds: product.variantId ? [product.variantId] : [],
+          variantIds:
+            Array.isArray(product.variantIds) && product.variantIds.length > 0
+              ? product.variantIds
+              : (product.variantId ? [product.variantId] : []),
           price: parseFloat(product.price) || 0,
         },
       ];
