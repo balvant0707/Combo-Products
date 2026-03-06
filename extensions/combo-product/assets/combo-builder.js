@@ -1172,7 +1172,22 @@
       });
     }
 
-    var cartPromise = isDynamic ? updateDynamicPriceThenCart() : postCartItems(items);
+    // For manual mode: call the variant endpoint first so the product is guaranteed
+    // to be ACTIVE + published on the Online Store before /cart/add.js is called.
+    // For dynamic mode: updateDynamicPriceThenCart already activates + publishes.
+    function ensurePublishedThenCart() {
+      return resolveBundleVariantId()
+        .then(function (variantId) {
+          items[0].id = variantId;
+          if (items[0].properties) {
+            items[0].properties['_combo_shopify_variant_id'] = String(variantId);
+          }
+        })
+        .catch(function () { /* ignore repair errors — proceed with current variant */ })
+        .then(function () { return postCartItems(items); });
+    }
+
+    var cartPromise = isDynamic ? updateDynamicPriceThenCart() : ensurePublishedThenCart();
 
     cartPromise
       .catch(function (err) {

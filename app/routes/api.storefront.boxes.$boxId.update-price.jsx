@@ -7,17 +7,42 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
+const ACTIVATE_PRODUCT_MUTATION = `#graphql
+  mutation productUpdate($product: ProductUpdateInput!) {
+    productUpdate(product: $product) {
+      product { id status }
+      userErrors { field message }
+    }
+  }
+`;
+
+const GET_PUBLICATIONS_QUERY = `#graphql
+  query GetPublications {
+    publications(first: 20) {
+      edges {
+        node {
+          id
+          catalog { title }
+        }
+      }
+    }
+  }
+`;
+
+const PUBLISH_PRODUCT_MUTATION = `#graphql
+  mutation publishablePublish($id: ID!, $input: [PublicationInput!]!) {
+    publishablePublish(id: $id, input: $input) {
+      publishable { ... on Product { id } }
+      userErrors { field message }
+    }
+  }
+`;
+
 const UPDATE_VARIANT_PRICE_MUTATION = `#graphql
   mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
     productVariantsBulkUpdate(productId: $productId, variants: $variants) {
-      productVariants {
-        id
-        price
-      }
-      userErrors {
-        field
-        message
-      }
+      productVariants { id price }
+      userErrors { field message }
     }
   }
 `;
@@ -28,7 +53,36 @@ function toNumericId(gid) {
   return raw.includes("/") ? raw.split("/").pop() : raw;
 }
 
-// Handle CORS preflight
+async function activateAndPublish(admin, productId) {
+  // Step 1: set ACTIVE
+  try {
+    await admin.graphql(ACTIVATE_PRODUCT_MUTATION, {
+      variables: { product: { id: productId, status: "ACTIVE" } },
+    });
+  } catch (e) {
+    console.warn("[update-price] activate error:", e);
+  }
+
+  // Step 2: publish to Online Store
+  try {
+    const pubResp = await admin.graphql(GET_PUBLICATIONS_QUERY);
+    const pubJson = await pubResp.json();
+    const edges = pubJson?.data?.publications?.edges || [];
+    const os = edges.find((e) => {
+      const title = e?.node?.catalog?.title || "";
+      return title.toLowerCase() === "online store";
+    });
+    if (os?.node?.id) {
+      await admin.graphql(PUBLISH_PRODUCT_MUTATION, {
+        variables: { id: productId, input: [{ publicationId: os.node.id }] },
+      });
+    }
+  } catch (e) {
+    console.warn("[update-price] publish error:", e);
+  }
+}
+
+// Handle CORS preflight via loader (GET/OPTIONS)
 export const loader = async ({ request }) => {
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -96,6 +150,10 @@ export const action = async ({ request, params }) => {
 
   try {
     const { admin } = await unauthenticated.admin(shop);
+
+    // Ensure ACTIVE + published, then update price — all before responding so
+    // the client can immediately call /cart/add.js and find the variant.
+    await activateAndPublish(admin, box.shopifyProductId);
 
     const resp = await admin.graphql(UPDATE_VARIANT_PRICE_MUTATION, {
       variables: {
