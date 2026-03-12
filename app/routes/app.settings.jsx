@@ -80,6 +80,14 @@ export default function SettingsPage() {
 
   return (
     <s-page heading="Settings">
+      <s-button
+        slot="primary-action"
+        onClick={() => document.getElementById("settings-form").requestSubmit()}
+        disabled={isSaving || undefined}
+      >
+        {isSaving ? "Saving..." : "Save Settings"}
+      </s-button>
+
       {actionData?.success && (
         <div
           style={{
@@ -96,27 +104,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <Form method="post">
-        {/* ── Save Button (top) ────────────────────────────────────────────── */}
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
-          <button
-            type="submit"
-            disabled={isSaving}
-            style={{
-              padding: "10px 24px",
-              background: isSaving ? "#9ca3af" : "#2A7A4F",
-              color: "#fff",
-              border: "none",
-              borderRadius: "6px",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: isSaving ? "not-allowed" : "pointer",
-              letterSpacing: "0.5px",
-            }}
-          >
-            {isSaving ? "Saving..." : "Save Settings"}
-          </button>
-        </div>
+      <Form id="settings-form" method="post">
 
         {/* ── All sections wrapper with gap ────────────────────────────────── */}
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
