@@ -97,294 +97,319 @@ export default function SettingsPage() {
       )}
 
       <Form method="post">
-        {/* ── Theme Customizer ─────────────────────────────────────────────── */}
-        <s-section heading="Theme Customizer">
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
-              Select a preset theme for your storefront widget. The chosen theme overrides block-level color settings.
-            </p>
+        {/* ── Theme Customizer + Widget Width side-by-side ─────────────────── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignItems: "start" }}>
 
-            {/* Hidden input carries the selected value on submit */}
-            <input type="hidden" name="presetTheme" value={selectedTheme} />
+          {/* ── Theme Customizer ─────────────────────────────────────────────── */}
+          <s-section heading="Theme Customizer">
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
+                Select a preset theme for your storefront widget. The chosen theme overrides block-level color settings.
+              </p>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))",
-                gap: "12px",
-              }}
-            >
-              {THEMES.map((theme) => {
-                const isActive = selectedTheme === theme.id;
-                return (
-                  <button
-                    key={theme.id}
-                    type="button"
-                    onClick={() => setSelectedTheme(theme.id)}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "10px 8px",
-                      border: isActive ? "2px solid #2A7A4F" : "2px solid #e5e1d8",
-                      borderRadius: "10px",
-                      background: isActive ? "#f0fdf4" : "#fff",
-                      cursor: "pointer",
-                      transition: "border-color 0.15s, background 0.15s",
-                      boxShadow: isActive ? "0 0 0 3px rgba(42,122,79,0.15)" : "none",
-                    }}
-                  >
-                    {/* Split-circle swatch */}
-                    <div
+              {/* Hidden input carries the selected value on submit */}
+              <input type="hidden" name="presetTheme" value={selectedTheme} />
+
+              {/* Theme slider */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "12px", color: "#6b7280" }}>Theme</span>
+                  <span style={{ fontSize: "12px", fontWeight: "600", color: "#065f46", background: "#f0fdf4", padding: "2px 10px", borderRadius: "12px", border: "1px solid #6ee7b7" }}>
+                    {THEMES.find((t) => t.id === selectedTheme)?.name ?? "Custom"} &mdash; {THEMES.find((t) => t.id === selectedTheme)?.dark ? "Dark" : "Light"}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max={THEMES.length - 1}
+                  value={THEMES.findIndex((t) => t.id === selectedTheme)}
+                  onChange={(e) => setSelectedTheme(THEMES[parseInt(e.target.value)].id)}
+                  style={{ width: "100%", accentColor: "#2A7A4F", cursor: "pointer" }}
+                />
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#9ca3af" }}>
+                  <span>{THEMES[0].name}</span>
+                  <span>{THEMES[THEMES.length - 1].name}</span>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))",
+                  gap: "10px",
+                  maxHeight: "380px",
+                  overflowY: "auto",
+                  paddingRight: "4px",
+                }}
+              >
+                {THEMES.map((theme) => {
+                  const isActive = selectedTheme === theme.id;
+                  return (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      onClick={() => setSelectedTheme(theme.id)}
                       style={{
-                        width: "48px",
-                        height: "48px",
-                        borderRadius: "50%",
-                        overflow: "hidden",
-                        border: "2px solid rgba(0,0,0,0.08)",
-                        flexShrink: 0,
-                        position: "relative",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "10px 8px",
+                        border: isActive ? "2px solid #2A7A4F" : "2px solid #e5e1d8",
+                        borderRadius: "10px",
+                        background: isActive ? "#f0fdf4" : "#fff",
+                        cursor: "pointer",
+                        transition: "border-color 0.15s, background 0.15s",
+                        boxShadow: isActive ? "0 0 0 3px rgba(42,122,79,0.15)" : "none",
                       }}
                     >
-                      {/* Left half = primary color */}
+                      {/* Split-circle swatch */}
                       <div
                         style={{
-                          position: "absolute",
-                          left: 0,
-                          top: 0,
-                          width: "50%",
-                          height: "100%",
-                          background: theme.primary,
-                        }}
-                      />
-                      {/* Right half = bg color */}
-                      <div
-                        style={{
-                          position: "absolute",
-                          right: 0,
-                          top: 0,
-                          width: "50%",
-                          height: "100%",
-                          background: theme.bg,
-                        }}
-                      />
-                    </div>
-
-                    <div style={{ textAlign: "center" }}>
-                      <div
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: isActive ? "600" : "500",
-                          color: isActive ? "#065f46" : "#1a1814",
-                          lineHeight: 1.3,
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {theme.name}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "10px",
-                          color: "#9ca3af",
-                          marginTop: "2px",
-                        }}
-                      >
-                        {theme.dark ? "Dark" : "Light"}
-                      </div>
-                    </div>
-
-                    {isActive && (
-                      <div
-                        style={{
-                          width: "16px",
-                          height: "16px",
+                          width: "44px",
+                          height: "44px",
                           borderRadius: "50%",
-                          background: "#2A7A4F",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
+                          overflow: "hidden",
+                          border: "2px solid rgba(0,0,0,0.08)",
                           flexShrink: 0,
+                          position: "relative",
                         }}
                       >
-                        <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                          <path d="M1 3.5L3.5 6L8 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
+                        <div style={{ position: "absolute", left: 0, top: 0, width: "50%", height: "100%", background: theme.primary }} />
+                        <div style={{ position: "absolute", right: 0, top: 0, width: "50%", height: "100%", background: theme.bg }} />
                       </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
 
-            {/* Custom color pickers — only shown when "Custom" theme is active */}
-            {selectedTheme === "custom" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", paddingTop: "4px" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "13px", fontWeight: "500", color: "#1a1814", marginBottom: "6px" }}>
-                    Primary Button Color
-                  </label>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <input
-                      type="color"
-                      name="buttonColor"
-                      value={buttonColor}
-                      onChange={(e) => setButtonColor(e.target.value)}
-                      style={{ width: "40px", height: "36px", border: "1px solid #c9c6be", borderRadius: "6px", cursor: "pointer", padding: "2px" }}
-                    />
-                    <input
-                      type="text"
-                      value={buttonColor}
-                      onChange={(e) => setButtonColor(e.target.value)}
-                      style={{ ...inputStyle, flex: 1, fontFamily: "monospace" }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: "13px", fontWeight: "500", color: "#1a1814", marginBottom: "6px" }}>
-                    Active Slot Color
-                  </label>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <input
-                      type="color"
-                      name="activeSlotColor"
-                      value={activeSlotColor}
-                      onChange={(e) => setActiveSlotColor(e.target.value)}
-                      style={{ width: "40px", height: "36px", border: "1px solid #c9c6be", borderRadius: "6px", cursor: "pointer", padding: "2px" }}
-                    />
-                    <input
-                      type="text"
-                      value={activeSlotColor}
-                      onChange={(e) => setActiveSlotColor(e.target.value)}
-                      style={{ ...inputStyle, flex: 1, fontFamily: "monospace" }}
-                    />
-                  </div>
-                </div>
+                      <div style={{ textAlign: "center" }}>
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: isActive ? "600" : "500",
+                            color: isActive ? "#065f46" : "#1a1814",
+                            lineHeight: 1.3,
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {theme.name}
+                        </div>
+                        <div style={{ fontSize: "10px", color: "#9ca3af", marginTop: "2px" }}>
+                          {theme.dark ? "Dark" : "Light"}
+                        </div>
+                      </div>
+
+                      {isActive && (
+                        <div
+                          style={{
+                            width: "16px",
+                            height: "16px",
+                            borderRadius: "50%",
+                            background: "#2A7A4F",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                            <path d="M1 3.5L3.5 6L8 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-            )}
 
-            {/* Always send color values (hidden when preset is active so they don't overwrite) */}
-            {selectedTheme !== "custom" && (
-              <>
-                <input type="hidden" name="buttonColor" value={buttonColor} />
-                <input type="hidden" name="activeSlotColor" value={activeSlotColor} />
-              </>
-            )}
-          </div>
-        </s-section>
-
-        {/* ── Widget Width ─────────────────────────────────────────────────── */}
-        <s-section heading="Widget Width">
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
-              Controls the maximum width of the combo builder widget on the storefront. Choose a preset or enter a custom pixel value.
-            </p>
-
-            <input type="hidden" name="widgetMaxWidth" value={widgetMaxWidth} />
-
-            {/* Preset cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "10px" }}>
-              {[
-                { value: 0,    label: "Full Width",  desc: "100%",     icon: "⬛" },
-                { value: 860,  label: "Narrow",      desc: "860px",    icon: "▬" },
-                { value: 1140, label: "Default",     desc: "1140px",   icon: "▬▬" },
-                { value: 1400, label: "Wide",        desc: "1400px",   icon: "▬▬▬" },
-                { value: 1920, label: "Full HD",     desc: "1920px",   icon: "▬▬▬▬" },
-              ].map((preset) => {
-                const isActive = widgetMaxWidth === preset.value;
-                return (
-                  <button
-                    key={preset.value}
-                    type="button"
-                    onClick={() => setWidgetMaxWidth(preset.value)}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: "10px",
-                      padding: "14px 10px",
-                      border: isActive ? "2px solid #2A7A4F" : "2px solid #e5e7eb",
-                      borderRadius: "10px",
-                      background: isActive ? "#f0fdf4" : "#fff",
-                      cursor: "pointer",
-                      transition: "border-color 0.15s, background 0.15s",
-                      boxShadow: isActive ? "0 0 0 3px rgba(42,122,79,0.12)" : "none",
-                    }}
-                  >
-                    {/* Visual width bar representation */}
-                    <div style={{ width: "100%", height: "28px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <div
-                        style={{
-                          height: "8px",
-                          borderRadius: "4px",
-                          background: isActive ? "#2A7A4F" : "#d1d5db",
-                          width: preset.value === 0 ? "100%" :
-                                 preset.value <= 860 ? "45%" :
-                                 preset.value <= 1140 ? "62%" :
-                                 preset.value <= 1400 ? "80%" : "100%",
-                          transition: "background 0.15s",
-                        }}
+              {/* Custom color pickers — only shown when "Custom" theme is active */}
+              {selectedTheme === "custom" && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", paddingTop: "4px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "13px", fontWeight: "500", color: "#1a1814", marginBottom: "6px" }}>
+                      Primary Button Color
+                    </label>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <input
+                        type="color"
+                        name="buttonColor"
+                        value={buttonColor}
+                        onChange={(e) => setButtonColor(e.target.value)}
+                        style={{ width: "40px", height: "36px", border: "1px solid #c9c6be", borderRadius: "6px", cursor: "pointer", padding: "2px" }}
+                      />
+                      <input
+                        type="text"
+                        value={buttonColor}
+                        onChange={(e) => setButtonColor(e.target.value)}
+                        style={{ ...inputStyle, flex: 1, fontFamily: "monospace" }}
                       />
                     </div>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: "12px", fontWeight: isActive ? "700" : "600", color: isActive ? "#065f46" : "#111827" }}>
-                        {preset.label}
-                      </div>
-                      <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px", fontFamily: "monospace" }}>
-                        {preset.desc}
-                      </div>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "13px", fontWeight: "500", color: "#1a1814", marginBottom: "6px" }}>
+                      Active Slot Color
+                    </label>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <input
+                        type="color"
+                        name="activeSlotColor"
+                        value={activeSlotColor}
+                        onChange={(e) => setActiveSlotColor(e.target.value)}
+                        style={{ width: "40px", height: "36px", border: "1px solid #c9c6be", borderRadius: "6px", cursor: "pointer", padding: "2px" }}
+                      />
+                      <input
+                        type="text"
+                        value={activeSlotColor}
+                        onChange={(e) => setActiveSlotColor(e.target.value)}
+                        style={{ ...inputStyle, flex: 1, fontFamily: "monospace" }}
+                      />
                     </div>
-                    {isActive && (
-                      <div style={{ width: "16px", height: "16px", borderRadius: "50%", background: "#2A7A4F", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                          <path d="M1 3.5L3.5 6L8 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+                  </div>
+                </div>
+              )}
 
-            {/* Custom value input */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ fontSize: "13px", color: "#374151", fontWeight: "500", flexShrink: 0 }}>
-                Custom value:
-              </div>
-              <div style={{ display: "flex", alignItems: "center", border: "1.5px solid #e5e7eb", borderRadius: "8px", overflow: "hidden", background: "#fff" }}>
-                <input
-                  type="number"
-                  min="0"
-                  max="3840"
-                  step="10"
-                  value={widgetMaxWidth === 0 ? "" : widgetMaxWidth}
-                  placeholder="e.g. 1200"
-                  onChange={(e) => {
-                    const v = parseInt(e.target.value);
-                    if (!isNaN(v) && v >= 0) setWidgetMaxWidth(v);
-                    else if (e.target.value === "") setWidgetMaxWidth(0);
-                  }}
-                  style={{
-                    padding: "8px 12px",
-                    border: "none",
-                    outline: "none",
-                    fontSize: "13px",
-                    color: "#111827",
-                    width: "100px",
-                    fontFamily: "monospace",
-                    background: "transparent",
-                  }}
-                />
-                <span style={{ padding: "8px 12px 8px 0", fontSize: "13px", color: "#9ca3af", fontFamily: "monospace" }}>
-                  {widgetMaxWidth === 0 ? "= 100%" : "px"}
-                </span>
-              </div>
-              {widgetMaxWidth === 0 && (
-                <span style={{ fontSize: "12px", color: "#6b7280" }}>Widget will span the full section width</span>
+              {selectedTheme !== "custom" && (
+                <>
+                  <input type="hidden" name="buttonColor" value={buttonColor} />
+                  <input type="hidden" name="activeSlotColor" value={activeSlotColor} />
+                </>
               )}
             </div>
-          </div>
-        </s-section>
+          </s-section>
+
+          {/* ── Widget Width ─────────────────────────────────────────────────── */}
+          <s-section heading="Widget Width">
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
+                Controls the maximum width of the combo builder widget on the storefront. Choose a preset or enter a custom pixel value.
+              </p>
+
+              <input type="hidden" name="widgetMaxWidth" value={widgetMaxWidth} />
+
+              {/* Width slider */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "12px", color: "#6b7280" }}>Width</span>
+                  <span style={{ fontSize: "12px", fontWeight: "600", color: "#065f46", background: "#f0fdf4", padding: "2px 10px", borderRadius: "12px", border: "1px solid #6ee7b7", fontFamily: "monospace" }}>
+                    {widgetMaxWidth === 0 ? "100% (Full Width)" : `${widgetMaxWidth}px`}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="3840"
+                  step="20"
+                  value={widgetMaxWidth}
+                  onChange={(e) => setWidgetMaxWidth(parseInt(e.target.value))}
+                  style={{ width: "100%", accentColor: "#2A7A4F", cursor: "pointer" }}
+                />
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#9ca3af" }}>
+                  <span>Full Width</span>
+                  <span>3840px</span>
+                </div>
+              </div>
+
+              {/* Preset cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "10px" }}>
+                {[
+                  { value: 0,    label: "Full Width", desc: "100%" },
+                  { value: 860,  label: "Narrow",     desc: "860px" },
+                  { value: 1140, label: "Default",    desc: "1140px" },
+                  { value: 1400, label: "Wide",       desc: "1400px" },
+                  { value: 1920, label: "Full HD",    desc: "1920px" },
+                ].map((preset) => {
+                  const isActive = widgetMaxWidth === preset.value;
+                  return (
+                    <button
+                      key={preset.value}
+                      type="button"
+                      onClick={() => setWidgetMaxWidth(preset.value)}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "12px 8px",
+                        border: isActive ? "2px solid #2A7A4F" : "2px solid #e5e7eb",
+                        borderRadius: "10px",
+                        background: isActive ? "#f0fdf4" : "#fff",
+                        cursor: "pointer",
+                        transition: "border-color 0.15s, background 0.15s",
+                        boxShadow: isActive ? "0 0 0 3px rgba(42,122,79,0.12)" : "none",
+                      }}
+                    >
+                      <div style={{ width: "100%", height: "24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <div
+                          style={{
+                            height: "8px",
+                            borderRadius: "4px",
+                            background: isActive ? "#2A7A4F" : "#d1d5db",
+                            width: preset.value === 0 ? "100%" :
+                                   preset.value <= 860 ? "45%" :
+                                   preset.value <= 1140 ? "62%" :
+                                   preset.value <= 1400 ? "80%" : "100%",
+                            transition: "background 0.15s",
+                          }}
+                        />
+                      </div>
+                      <div style={{ textAlign: "center" }}>
+                        <div style={{ fontSize: "12px", fontWeight: isActive ? "700" : "600", color: isActive ? "#065f46" : "#111827" }}>
+                          {preset.label}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px", fontFamily: "monospace" }}>
+                          {preset.desc}
+                        </div>
+                      </div>
+                      {isActive && (
+                        <div style={{ width: "16px", height: "16px", borderRadius: "50%", background: "#2A7A4F", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                            <path d="M1 3.5L3.5 6L8 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Custom value input */}
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ fontSize: "13px", color: "#374151", fontWeight: "500", flexShrink: 0 }}>
+                  Custom value:
+                </div>
+                <div style={{ display: "flex", alignItems: "center", border: "1.5px solid #e5e7eb", borderRadius: "8px", overflow: "hidden", background: "#fff" }}>
+                  <input
+                    type="number"
+                    min="0"
+                    max="3840"
+                    step="10"
+                    value={widgetMaxWidth === 0 ? "" : widgetMaxWidth}
+                    placeholder="e.g. 1200"
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value);
+                      if (!isNaN(v) && v >= 0) setWidgetMaxWidth(v);
+                      else if (e.target.value === "") setWidgetMaxWidth(0);
+                    }}
+                    style={{
+                      padding: "8px 12px",
+                      border: "none",
+                      outline: "none",
+                      fontSize: "13px",
+                      color: "#111827",
+                      width: "100px",
+                      fontFamily: "monospace",
+                      background: "transparent",
+                    }}
+                  />
+                  <span style={{ padding: "8px 12px 8px 0", fontSize: "13px", color: "#9ca3af", fontFamily: "monospace" }}>
+                    {widgetMaxWidth === 0 ? "= 100%" : "px"}
+                  </span>
+                </div>
+                {widgetMaxWidth === 0 && (
+                  <span style={{ fontSize: "12px", color: "#6b7280" }}>Full section width</span>
+                )}
+              </div>
+            </div>
+          </s-section>
+
+        </div>
 
         {/* ── Widget Text Labels ───────────────────────────────────────────── */}
         <s-section heading="Widget Settings">

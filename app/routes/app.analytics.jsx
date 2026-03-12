@@ -857,13 +857,13 @@ export default function AnalyticsPage() {
       </div>
 
       {/* ── Daily Breakdown ── */}
-      <s-section heading="Daily Breakdown">
+      {/* <s-section heading="Daily Breakdown">
         {!dailyTrend || dailyTrend.length === 0 ? (
           <s-paragraph>No data available yet for this period.</s-paragraph>
         ) : (
           <DailyTable data={dailyTrend} />
         )}
-      </s-section>
+      </s-section> */}
     </s-page>
   );
 }
