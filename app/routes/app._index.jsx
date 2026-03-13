@@ -12,7 +12,7 @@ import { buildThemeEditorUrl } from "../utils/theme-editor.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 export const loader = async ({ request }) => {
-  const { session } = await authenticate.admin(request);
+  const { session, admin } = await authenticate.admin(request);
   const shop = session.shop;
 
   const [activeBoxCount, bundlesSold, bundleRevenue, recentOrders] =
@@ -27,7 +27,7 @@ export const loader = async ({ request }) => {
     activeBoxCount,
     bundlesSold,
     bundleRevenue,
-    themeEditorUrl: buildThemeEditorUrl(shop),
+    themeEditorUrl: await buildThemeEditorUrl({ shop, admin }),
     recentOrders: recentOrders.map((order) => ({
       id: order.id,
       orderId: order.orderId,
@@ -150,8 +150,8 @@ function ThemeCustomizationCard({
 }) {
   const steps = [
     "Open Shopify Theme Editor from this dashboard.",
-    "A new tab opens Theme Customization on the Default product template.",
-    "Combo Builder is added as an app block in the product section.",
+    "A new tab opens Theme Customization on the live product template preview.",
+    "Combo Builder opens in the product section or the Apps area for that theme.",
     "Drag the block to the right position and click Save.",
   ];
   const productInfoBlocks = [
@@ -1095,7 +1095,7 @@ export default function DashboardPage() {
             },
             {
               step: "2",
-              text: "Open Theme Editor to load the Default product template with the Combo Builder block ready to place.",
+              text: "Open Theme Editor to load Theme Customization with the Combo Builder block targeted to the product template.",
             },
             {
               step: "3",
