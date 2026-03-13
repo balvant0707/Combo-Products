@@ -8,6 +8,7 @@ import {
   getBundleRevenue,
   getRecentOrders,
 } from "../models/orders.server";
+import { buildThemeEditorUrl } from "../utils/theme-editor.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 export const loader = async ({ request }) => {
@@ -26,6 +27,7 @@ export const loader = async ({ request }) => {
     activeBoxCount,
     bundlesSold,
     bundleRevenue,
+    themeEditorUrl: buildThemeEditorUrl(shop),
     recentOrders: recentOrders.map((order) => ({
       id: order.id,
       orderId: order.orderId,
@@ -770,33 +772,25 @@ export default function DashboardPage() {
     activeBoxCount,
     bundlesSold,
     bundleRevenue,
+    themeEditorUrl,
     recentOrders,
   } = useLoaderData();
   const location = useLocation();
   const navigate = useNavigate();
 
   const stats = STAT_CARDS(activeBoxCount, bundlesSold, bundleRevenue);
-  const themeEditorLauncherUrl = withEmbeddedAppParams(
-    "/app/open-theme-editor",
-    location.search,
-  );
-
   function navigateTo(path) {
     navigate(withEmbeddedAppParams(path, location.search));
   }
 
   function openThemeEditor() {
     if (typeof window === "undefined") return;
-    const popup = window.open(
-      themeEditorLauncherUrl,
-      "_blank",
-      "noopener,noreferrer",
-    );
+    const popup = window.open(themeEditorUrl, "_blank", "noopener,noreferrer");
     if (popup) {
       popup.opener = null;
       return;
     }
-    window.location.href = themeEditorLauncherUrl;
+    window.location.href = themeEditorUrl;
   }
 
   const quickActions = [
