@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from "react";
-import { useLoaderData } from "react-router";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useLoaderData, useNavigate } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { getAnalytics } from "../models/orders.server";
@@ -24,7 +24,12 @@ export const loader = async ({ request }) => {
   }
 
   const analytics = await getAnalytics(session.shop, fromDate, toDate);
-  return { analytics, period: customFrom ? "custom" : period };
+  return {
+    analytics,
+    period: customFrom ? "custom" : period,
+    fromDate,
+    toDate,
+  };
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -44,35 +49,362 @@ function fmtDate(isoStr) {
   return new Date(isoStr).toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
 }
 
-// ─── Period Selector ─────────────────────────────────────────────────────────
-function PeriodSelector({ active }) {
-  const periods = [
-    { key: "7", label: "7 Days" },
-    { key: "30", label: "30 Days" },
-    { key: "90", label: "90 Days" },
-  ];
+// ─── Date Range Picker ────────────────────────────────────────────────────────
+const MONTH_NAMES = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December",
+];
+const DAY_LABELS = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+
+function toISO(year, month, day) {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function CalendarMonth({ year, month, fromDate, toDate, hoverDate, pickingEnd, onDayClick, onMouseEnter, onMouseLeave }) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfWeek = new Date(year, month, 1).getDay();
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const cells = [];
+  for (let i = 0; i < firstDayOfWeek; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  const effectiveTo = pickingEnd && hoverDate
+    ? (hoverDate >= fromDate ? hoverDate : fromDate)
+    : toDate;
+  const effectiveFrom = pickingEnd && hoverDate
+    ? (hoverDate < fromDate ? hoverDate : fromDate)
+    : fromDate;
+
   return (
-    <div style={{ display: "flex", gap: "6px" }}>
-      {periods.map((p) => (
-        <a
-          key={p.key}
-          href={`?period=${p.key}`}
+    <div style={{ minWidth: "220px" }}>
+      <div style={{ textAlign: "center", fontWeight: "700", fontSize: "13px", marginBottom: "10px", color: "#111827" }}>
+        {MONTH_NAMES[month]} {year}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px", marginBottom: "4px" }}>
+        {DAY_LABELS.map((d) => (
+          <div key={d} style={{ textAlign: "center", fontSize: "11px", color: "#6b7280", fontWeight: "600", padding: "3px 0" }}>
+            {d}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px" }}>
+        {cells.map((day, idx) => {
+          if (!day) return <div key={`e${idx}`} style={{ height: "34px" }} />;
+          const ds = toISO(year, month, day);
+          const isStart = ds === fromDate;
+          const isEnd = ds === effectiveTo;
+          const inRange = effectiveFrom && effectiveTo && ds > effectiveFrom && ds < effectiveTo;
+          const isToday = ds === todayStr;
+
+          let bg = "transparent";
+          let color = "#374151";
+          if (isStart || isEnd) { bg = "#111827"; color = "#ffffff"; }
+          else if (inRange) { bg = "#f3f4f6"; color = "#374151"; }
+          else if (ds === hoverDate && pickingEnd) { bg = "#e5e7eb"; }
+
+          return (
+            <div
+              key={ds}
+              onClick={() => onDayClick(ds)}
+              onMouseEnter={() => onMouseEnter(ds)}
+              onMouseLeave={onMouseLeave}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "34px",
+                background: inRange ? "#f3f4f6" : "transparent",
+                cursor: "pointer",
+              }}
+            >
+              <div
+                style={{
+                  width: "30px",
+                  height: "30px",
+                  borderRadius: "50%",
+                  background: bg,
+                  color,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "12px",
+                  fontWeight: isStart || isEnd ? "700" : isToday ? "700" : "400",
+                  outline: isToday && !isStart && !isEnd ? "1.5px solid #9ca3af" : "none",
+                  outlineOffset: "1px",
+                }}
+              >
+                {day}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
+  const navigate = useNavigate();
+  const containerRef = useRef(null);
+  const [open, setOpen] = useState(false);
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const presets = [
+    { key: "7", label: "Last 7 days" },
+    { key: "30", label: "Last 30 days" },
+    { key: "90", label: "Last 90 days" },
+    { key: "custom", label: "Custom range" },
+  ];
+
+  const [selectedPreset, setSelectedPreset] = useState(period === "custom" ? "custom" : (period || "30"));
+  const [fromDate, setFromDate] = useState(initFrom || todayStr);
+  const [toDate, setToDate] = useState(initTo || todayStr);
+  const [pickingEnd, setPickingEnd] = useState(false);
+  const [hoverDate, setHoverDate] = useState(null);
+
+  const initDate = fromDate ? new Date(fromDate + "T00:00:00") : new Date();
+  const [calYear, setCalYear] = useState(initDate.getFullYear());
+  const [calMonth, setCalMonth] = useState(initDate.getMonth());
+
+  const rightMonth = calMonth === 11 ? 0 : calMonth + 1;
+  const rightYear = calMonth === 11 ? calYear + 1 : calYear;
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    function handler(e) {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const activeLabel = (() => {
+    if (period === "custom") {
+      if (initFrom && initTo) return `${fmtShortDate(initFrom)} – ${fmtShortDate(initTo)}`;
+    }
+    return presets.find((p) => p.key === period)?.label || "Last 30 days";
+  })();
+
+  function handlePresetChange(key) {
+    setSelectedPreset(key);
+    setPickingEnd(false);
+    if (key !== "custom") {
+      const days = parseInt(key);
+      const to = todayStr;
+      const from = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+      setFromDate(from);
+      setToDate(to);
+      const d = new Date(from + "T00:00:00");
+      setCalYear(d.getFullYear());
+      setCalMonth(d.getMonth());
+    }
+  }
+
+  function handleDayClick(ds) {
+    if (!pickingEnd) {
+      setFromDate(ds);
+      setToDate(ds);
+      setPickingEnd(true);
+      setSelectedPreset("custom");
+    } else {
+      if (ds < fromDate) {
+        setToDate(fromDate);
+        setFromDate(ds);
+      } else {
+        setToDate(ds);
+      }
+      setPickingEnd(false);
+      setHoverDate(null);
+    }
+  }
+
+  function handleApply() {
+    setOpen(false);
+    setPickingEnd(false);
+    if (selectedPreset !== "custom") {
+      navigate(`?period=${selectedPreset}`);
+    } else if (fromDate && toDate) {
+      navigate(`?from=${fromDate}&to=${toDate}`);
+    }
+  }
+
+  function handleCancel() {
+    setOpen(false);
+    setPickingEnd(false);
+    setHoverDate(null);
+    // Reset to current loaded values
+    setSelectedPreset(period === "custom" ? "custom" : (period || "30"));
+    setFromDate(initFrom || todayStr);
+    setToDate(initTo || todayStr);
+  }
+
+  function prevMonth() {
+    if (calMonth === 0) { setCalMonth(11); setCalYear((y) => y - 1); }
+    else setCalMonth((m) => m - 1);
+  }
+  function nextMonth() {
+    if (calMonth === 11) { setCalMonth(0); setCalYear((y) => y + 1); }
+    else setCalMonth((m) => m + 1);
+  }
+
+  const navBtnStyle = {
+    background: "none",
+    border: "1px solid #e5e7eb",
+    borderRadius: "6px",
+    cursor: "pointer",
+    padding: "4px 8px",
+    fontSize: "14px",
+    color: "#374151",
+    lineHeight: 1,
+  };
+
+  return (
+    <div ref={containerRef} style={{ position: "relative", display: "inline-block" }}>
+      {/* Trigger */}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          padding: "7px 14px",
+          borderRadius: "8px",
+          border: "1.5px solid #e5e7eb",
+          background: "#ffffff",
+          fontSize: "13px",
+          fontWeight: "600",
+          color: "#374151",
+          cursor: "pointer",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {activeLabel}
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+          <path d="M1 1l4 4 4-4" stroke="#6b7280" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {/* Popover */}
+      {open && (
+        <div
           style={{
-            padding: "7px 16px",
-            borderRadius: "8px",
-            fontSize: "13px",
-            fontWeight: "600",
-            textDecoration: "none",
-            color: active === p.key ? "#fff" : "#6b7280",
-            background: active === p.key ? "#2A7A4F" : "#f3f4f6",
-            border: `1.5px solid ${active === p.key ? "#2A7A4F" : "#e5e7eb"}`,
-            transition: "all 0.15s ease",
-            letterSpacing: "0.2px",
+            position: "absolute",
+            top: "calc(100% + 8px)",
+            right: 0,
+            background: "#ffffff",
+            border: "1px solid #e5e7eb",
+            borderRadius: "12px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.13)",
+            zIndex: 1000,
+            padding: "16px",
+            minWidth: "520px",
           }}
         >
-          {p.label}
-        </a>
-      ))}
+          {/* Preset select */}
+          <select
+            value={selectedPreset}
+            onChange={(e) => handlePresetChange(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              borderRadius: "8px",
+              border: "1.5px solid #e5e7eb",
+              fontSize: "13px",
+              fontWeight: "600",
+              color: "#374151",
+              background: "#ffffff",
+              marginBottom: "12px",
+              cursor: "pointer",
+            }}
+          >
+            {presets.map((p) => (
+              <option key={p.key} value={p.key}>{p.label}</option>
+            ))}
+          </select>
+
+          {/* Date inputs */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => { setFromDate(e.target.value); setSelectedPreset("custom"); }}
+              style={{ flex: 1, padding: "8px 10px", borderRadius: "8px", border: "1.5px solid #e5e7eb", fontSize: "13px", color: "#374151" }}
+            />
+            <span style={{ color: "#9ca3af", fontSize: "16px" }}>→</span>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => { setToDate(e.target.value); setSelectedPreset("custom"); }}
+              style={{ flex: 1, padding: "8px 10px", borderRadius: "8px", border: "1.5px solid #e5e7eb", fontSize: "13px", color: "#374151" }}
+            />
+          </div>
+
+          {/* Calendars */}
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "0" }}>
+            {/* Left calendar with left nav arrow */}
+            <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
+                <button onClick={prevMonth} style={navBtnStyle}>←</button>
+                <div style={{ flex: 1 }} />
+              </div>
+              <CalendarMonth
+                year={calYear}
+                month={calMonth}
+                fromDate={fromDate}
+                toDate={toDate}
+                hoverDate={hoverDate}
+                pickingEnd={pickingEnd}
+                onDayClick={handleDayClick}
+                onMouseEnter={(ds) => { if (pickingEnd) setHoverDate(ds); }}
+                onMouseLeave={() => { if (pickingEnd) setHoverDate(null); }}
+              />
+            </div>
+
+            <div style={{ width: "1px", background: "#f3f4f6", margin: "0 16px", alignSelf: "stretch" }} />
+
+            {/* Right calendar with right nav arrow */}
+            <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
+                <div style={{ flex: 1 }} />
+                <button onClick={nextMonth} style={navBtnStyle}>→</button>
+              </div>
+              <CalendarMonth
+                year={rightYear}
+                month={rightMonth}
+                fromDate={fromDate}
+                toDate={toDate}
+                hoverDate={hoverDate}
+                pickingEnd={pickingEnd}
+                onDayClick={handleDayClick}
+                onMouseEnter={(ds) => { if (pickingEnd) setHoverDate(ds); }}
+                onMouseLeave={() => { if (pickingEnd) setHoverDate(null); }}
+              />
+            </div>
+          </div>
+
+          {/* Cancel / Apply */}
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "16px", borderTop: "1px solid #f3f4f6", paddingTop: "16px" }}>
+            <button
+              onClick={handleCancel}
+              style={{ padding: "8px 20px", borderRadius: "8px", border: "1.5px solid #e5e7eb", background: "#ffffff", fontSize: "13px", fontWeight: "600", color: "#374151", cursor: "pointer" }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleApply}
+              style={{ padding: "8px 20px", borderRadius: "8px", border: "none", background: "#111827", fontSize: "13px", fontWeight: "600", color: "#ffffff", cursor: "pointer" }}
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -151,7 +483,7 @@ function KpiCard({ label, value, subLabel, change, accentColor, icon, subtitle }
   );
 }
 
-// ─── Dark Interactive Line Chart ──────────────────────────────────────────────
+// ─── White Interactive Line Chart ─────────────────────────────────────────────
 function LineChart({
   title,
   totalValue,
@@ -203,10 +535,8 @@ function LineChart({
     return `${buildPath(arr)} L ${lastX.toFixed(2)},${base} L ${firstX.toFixed(2)},${base} Z`;
   }
 
-  // Y-axis ticks: 0, 25%, 50%, 75%, 100% of yMax
   const yTicks = [0, yMax * 0.25, yMax * 0.5, yMax * 0.75, yMax].map(Math.round);
 
-  // X-axis labels: at most 7 evenly spaced
   const xLabels = [];
   if (n > 0) {
     const step = Math.max(1, Math.floor(n / 6));
@@ -221,12 +551,11 @@ function LineChart({
 
   const isUp = change === null ? null : change >= 0;
 
-  // Hover tooltip position
   let tooltipX = 0, tooltipY = 0, tooltipLeft = true;
   if (hoverIdx !== null && data[hoverIdx]) {
     tooltipX = xPos(hoverIdx, n);
     tooltipY = yPos(data[hoverIdx].value);
-    tooltipLeft = tooltipX > W * 0.6; // flip to left if near right edge
+    tooltipLeft = tooltipX > W * 0.6;
   }
 
   const handleMouseMove = useCallback(
@@ -240,10 +569,7 @@ function LineChart({
       let minDist = Infinity;
       for (let i = 0; i < n; i++) {
         const dist = Math.abs(xPos(i, n) - svgX);
-        if (dist < minDist) {
-          minDist = dist;
-          closestIdx = i;
-        }
+        if (dist < minDist) { minDist = dist; closestIdx = i; }
       }
       setHoverIdx(closestIdx);
     },
@@ -252,7 +578,6 @@ function LineChart({
 
   const handleMouseLeave = useCallback(() => setHoverIdx(null), []);
 
-  // Tooltip box size
   const TW = 148, TH = prevArr.length > 0 ? 76 : 54, TR = 7;
 
   return (
@@ -286,10 +611,11 @@ function LineChart({
         ) : null}
       </div>
 
-      {/* Dark SVG Chart */}
+      {/* White SVG Chart */}
       <div
         style={{
-          background: "#0f1117",
+          background: "#ffffff",
+          border: "1px solid #e5e7eb",
           borderRadius: "12px",
           padding: "8px 4px 4px",
           overflow: "hidden",
@@ -307,20 +633,18 @@ function LineChart({
           onMouseLeave={handleMouseLeave}
         >
           <defs>
-            {/* Stroke gradient: color → color2 */}
             <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor={color} />
               <stop offset="100%" stopColor={color2} />
             </linearGradient>
-            {/* Area fill gradient */}
             <linearGradient id={areaGradId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity="0.25" />
-              <stop offset="100%" stopColor={color} stopOpacity="0.01" />
+              <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+              <stop offset="100%" stopColor={color} stopOpacity="0.02" />
             </linearGradient>
           </defs>
 
           {/* Background */}
-          <rect x="0" y="0" width={W} height={H} fill="#0f1117" />
+          <rect x="0" y="0" width={W} height={H} fill="#ffffff" />
 
           {/* Y-axis grid lines */}
           {yTicks.map((tick, i) => {
@@ -329,11 +653,11 @@ function LineChart({
               <g key={i}>
                 <line
                   x1={ML} y1={y} x2={W - MR} y2={y}
-                  stroke="#1f2937"
+                  stroke="#e5e7eb"
                   strokeWidth={i === 0 ? 1.5 : 1}
                   strokeDasharray={i === 0 ? "none" : "4,4"}
                 />
-                <text x={ML - 8} y={y + 4} textAnchor="end" fontSize="9.5" fill="#4b5563" fontFamily="monospace">
+                <text x={ML - 8} y={y + 4} textAnchor="end" fontSize="9.5" fill="#9ca3af" fontFamily="monospace">
                   {formatY(tick)}
                 </text>
               </g>
@@ -348,11 +672,11 @@ function LineChart({
             <path
               d={buildPath(prevArr)}
               fill="none"
-              stroke="#374151"
+              stroke="#d1d5db"
               strokeWidth="2"
               strokeDasharray="6,4"
               strokeLinecap="round"
-              opacity="0.85"
+              opacity="0.9"
             />
           )}
 
@@ -370,7 +694,7 @@ function LineChart({
           {xLabels.map((idx) => {
             if (!data[idx]) return null;
             return (
-              <text key={idx} x={xPos(idx, n)} y={H - 8} textAnchor="middle" fontSize="9.5" fill="#4b5563" fontFamily="monospace">
+              <text key={idx} x={xPos(idx, n)} y={H - 8} textAnchor="middle" fontSize="9.5" fill="#9ca3af" fontFamily="monospace">
                 {fmtShortDate(data[idx].date)}
               </text>
             );
@@ -383,9 +707,9 @@ function LineChart({
               <line
                 x1={tooltipX} y1={MT}
                 x2={tooltipX} y2={MT + chartH}
-                stroke="#ffffff"
+                stroke="#374151"
                 strokeWidth="1"
-                strokeOpacity="0.18"
+                strokeOpacity="0.2"
               />
 
               {/* Dot on current line */}
@@ -394,7 +718,7 @@ function LineChart({
                 cy={yPos(data[hoverIdx].value)}
                 r="5"
                 fill={color}
-                stroke="#0f1117"
+                stroke="#ffffff"
                 strokeWidth="2.5"
               />
 
@@ -404,8 +728,8 @@ function LineChart({
                   cx={xPos(hoverIdx, prevArr.length)}
                   cy={yPos(prevArr[hoverIdx].value)}
                   r="4"
-                  fill="#6b7280"
-                  stroke="#0f1117"
+                  fill="#9ca3af"
+                  stroke="#ffffff"
                   strokeWidth="2"
                 />
               )}
@@ -424,11 +748,9 @@ function LineChart({
                       stroke="#374151"
                       strokeWidth="1"
                     />
-                    {/* Date */}
                     <text x={tx + 10} y={ty + 18} fontSize="10" fill="#9ca3af" fontFamily="monospace" fontWeight="600">
                       {fmtShortDate(data[hoverIdx].date)}
                     </text>
-                    {/* Current value */}
                     <circle cx={tx + 10} cy={ty + 32} r="3.5" fill={color} />
                     <text x={tx + 18} y={ty + 36} fontSize="11" fill="#f9fafb" fontFamily="monospace">
                       {formatY(data[hoverIdx].value)}
@@ -436,7 +758,6 @@ function LineChart({
                     <text x={tx + TW - 10} y={ty + 36} textAnchor="end" fontSize="9" fill="#6b7280" fontFamily="monospace">
                       {periodLabel.slice(0, 16)}
                     </text>
-                    {/* Previous value */}
                     {prevArr[hoverIdx] && (
                       <>
                         <line x1={tx + 8} y1={ty + 44} x2={tx + 18} y2={ty + 44} stroke="#6b7280" strokeWidth="1.5" strokeDasharray="3,2" />
@@ -473,7 +794,7 @@ function LineChart({
         {prevArr.length > 0 && (
           <span style={{ display: "flex", alignItems: "center", gap: "7px" }}>
             <svg width="24" height="4" style={{ verticalAlign: "middle" }}>
-              <line x1="0" y1="2" x2="24" y2="2" stroke="#6b7280" strokeWidth="2" strokeDasharray="5,3" />
+              <line x1="0" y1="2" x2="24" y2="2" stroke="#d1d5db" strokeWidth="2" strokeDasharray="5,3" />
             </svg>
             {prevPeriodLabel}
           </span>
@@ -611,83 +932,6 @@ function BoxPerformanceChart({ data }) {
   );
 }
 
-// ─── Daily Breakdown Table ────────────────────────────────────────────────────
-function DailyTable({ data }) {
-  const [hoverRow, setHoverRow] = useState(null);
-  const reversed = [...(data || [])].reverse();
-  const maxRev = Math.max(...(data || []).map((x) => x.revenue), 1);
-
-  return (
-    <div style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-        <thead>
-          <tr style={{ background: "#f9fafb" }}>
-            {["Date", "Orders", "Revenue", "Trend"].map((h) => (
-              <th
-                key={h}
-                style={{
-                  textAlign: "left",
-                  padding: "10px 16px",
-                  borderBottom: "1.5px solid #e5e7eb",
-                  color: "#6b7280",
-                  fontSize: "10px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.8px",
-                  fontWeight: "600",
-                }}
-              >
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {reversed.map((d, rowIdx) => {
-            const isEmpty = d.orders === 0 && d.revenue === 0;
-            const barW = isEmpty ? 0 : Math.max(3, (d.revenue / maxRev) * 100);
-            const isHovered = hoverRow === rowIdx;
-            return (
-              <tr
-                key={d.date}
-                onMouseEnter={() => setHoverRow(rowIdx)}
-                onMouseLeave={() => setHoverRow(null)}
-                style={{
-                  opacity: isEmpty ? 0.45 : 1,
-                  background: isHovered ? "#f0fdf4" : "transparent",
-                  transition: "background 0.12s",
-                }}
-              >
-                <td style={{ padding: "10px 16px", borderBottom: "1px solid #f3f4f6", fontFamily: "monospace", color: "#374151", fontWeight: "600" }}>
-                  {fmtShortDate(d.date)}
-                </td>
-                <td style={{ padding: "10px 16px", borderBottom: "1px solid #f3f4f6", color: isEmpty ? "#d1d5db" : "#111827", fontFamily: "monospace", fontWeight: isEmpty ? "400" : "600" }}>
-                  {d.orders === 0 ? "—" : d.orders}
-                </td>
-                <td style={{ padding: "10px 16px", borderBottom: "1px solid #f3f4f6", color: isEmpty ? "#d1d5db" : "#2A7A4F", fontWeight: isEmpty ? "400" : "700", fontFamily: "monospace" }}>
-                  {isEmpty ? "—" : `₹${d.revenue.toLocaleString("en-IN")}`}
-                </td>
-                <td style={{ padding: "10px 16px", borderBottom: "1px solid #f3f4f6", minWidth: "120px" }}>
-                  <div style={{ position: "relative", height: "8px", background: "#f3f4f6", borderRadius: "4px", overflow: "hidden" }}>
-                    <div
-                      style={{
-                        width: `${barW}%`,
-                        height: "100%",
-                        background: isEmpty ? "transparent" : "linear-gradient(90deg, #3b82f6, #2A7A4F)",
-                        borderRadius: "4px",
-                        transition: "width 0.3s ease",
-                      }}
-                    />
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 // ─── Comparison Period Banner ─────────────────────────────────────────────────
 function ComparisonBanner({ period, prevPeriod }) {
   if (!period || !prevPeriod) return null;
@@ -720,7 +964,7 @@ function ComparisonBanner({ period, prevPeriod }) {
 
 // ─── Main Analytics Page ──────────────────────────────────────────────────────
 export default function AnalyticsPage() {
-  const { analytics, period } = useLoaderData();
+  const { analytics, period, fromDate, toDate } = useLoaderData();
   const {
     totalOrders,
     totalRevenue,
@@ -771,7 +1015,7 @@ export default function AnalyticsPage() {
               Bundle analytics · period-over-period comparison
             </div>
           </div>
-          <PeriodSelector active={period} />
+          <DateRangePicker period={period} fromDate={fromDate} toDate={toDate} />
         </div>
 
         <ComparisonBanner period={periodRange} prevPeriod={prevPeriod} />
@@ -855,15 +1099,6 @@ export default function AnalyticsPage() {
           <BoxPerformanceChart data={boxPerformance} />
         </s-section>
       </div>
-
-      {/* ── Daily Breakdown ── */}
-      {/* <s-section heading="Daily Breakdown">
-        {!dailyTrend || dailyTrend.length === 0 ? (
-          <s-paragraph>No data available yet for this period.</s-paragraph>
-        ) : (
-          <DailyTable data={dailyTrend} />
-        )}
-      </s-section> */}
     </s-page>
   );
 }
