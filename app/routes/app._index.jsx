@@ -148,8 +148,8 @@ function ThemeCustomizationCard({
 }) {
   const steps = [
     "Open Shopify Theme Editor from this dashboard.",
-    "Shopify opens the Default product template for theme customization.",
-    "Combo Builder is inserted into the product section so you can place it correctly.",
+    "A new tab opens Theme Customization on the Default product template.",
+    "Combo Builder is added as an app block in the product section.",
     "Drag the block to the right position and click Save.",
   ];
   const productInfoBlocks = [
