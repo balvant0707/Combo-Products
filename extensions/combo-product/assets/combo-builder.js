@@ -11,8 +11,8 @@
 
   function formatPrice(amount, currencySymbol) {
     return currencySymbol + Number(amount).toLocaleString('en-IN', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     });
   }
 
