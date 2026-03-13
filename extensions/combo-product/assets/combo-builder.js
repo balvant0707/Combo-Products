@@ -1403,6 +1403,27 @@
     });
 
     // ── Cart Action ──
+    function resetBuilderSelection() {
+      setTimeout(function () {
+        for (var i = 0; i < slots.length; i++) {
+          slots[i] = null;
+        }
+        activeSlotIndex = 0;
+
+        if (giftInput) giftInput.value = '';
+
+        setBoxCardPrice(
+          box,
+          isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0),
+          ctx.currencySymbol
+        );
+
+        renderSlots();
+        renderProductGrid();
+        updateCartButton();
+      }, 0);
+    }
+
     function doAddToCart() {
       if (slots.filter(Boolean).length < box.itemCount) {
         // Flash empty slots
@@ -1441,7 +1462,8 @@
           resolveAddToCartLabel(ctx.settings),
           ctx.currencySymbol,
           ctx.apiBase,
-          ctx.shop
+          ctx.shop,
+          resetBuilderSelection
         );
       });
     }
@@ -1607,7 +1629,7 @@
 
   // ─── Add to Cart ──────────────────────────────────────────────────────────────
 
-  function addToCart(box, slots, sessionId, giftMessage, inlineBtn, stickyBtn, readyLabel, currencySymbol, apiBase, shop) {
+  function addToCart(box, slots, sessionId, giftMessage, inlineBtn, stickyBtn, readyLabel, currencySymbol, apiBase, shop, onSuccess) {
     var resolvedReadyLabel = readyLabel || 'Add To Cart';
     var resolvedCurrencySymbol = currencySymbol || '\u20B9';
     var resolvedApiBase = String(apiBase || DEFAULT_API_BASE || '').replace(/\/+$/, '');
@@ -2002,6 +2024,7 @@
         var opened = tryOpenThemeCartDrawer();
         if (!opened) {
           hidePageLoader(true);
+          if (typeof onSuccess === 'function') onSuccess();
           setTimeout(function () { window.location.href = '/cart'; }, 1200);
           return;
         }
@@ -2009,6 +2032,7 @@
         setBtns('loading', 'Adding...');
         return waitForComboCartPresentation(selectedItemsCount).then(function () {
           hidePageLoader(true);
+          if (typeof onSuccess === 'function') onSuccess();
           setBtns('success', 'Added to Cart! âœ“');
         });
       })
