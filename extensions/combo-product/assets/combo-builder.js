@@ -16,6 +16,29 @@
     });
   }
 
+  function isDynamicBundlePrice(box) {
+    return String((box && box.bundlePriceType) || 'manual') === 'dynamic';
+  }
+
+  function getSelectedProductsTotal(slots) {
+    var total = 0;
+    (slots || []).forEach(function (p) {
+      if (!p) return;
+      if (p.productPrice != null && parseFloat(p.productPrice) > 0) {
+        total += parseFloat(p.productPrice);
+      }
+    });
+    return total;
+  }
+
+  function renderStickyTotal(totalEl, amount, currencySymbol) {
+    if (!totalEl) return;
+    totalEl.innerHTML =
+      'Total <span class="cb-sticky-price">' +
+      formatPrice(amount || 0, currencySymbol) +
+      '/-</span>';
+  }
+
   function resolveAddToCartLabel(settings) {
     var label = settings && settings.addToCartLabel != null
       ? String(settings.addToCartLabel).trim()
@@ -455,7 +478,11 @@
     center.className = 'cb-sticky-center';
     var totalRow = document.createElement('div');
     totalRow.className = 'cb-sticky-total';
-    totalRow.innerHTML = 'Total <span class="cb-sticky-price">' + formatPrice(box.bundlePrice, ctx.currencySymbol) + '/-</span>';
+    renderStickyTotal(
+      totalRow,
+      isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0),
+      ctx.currencySymbol
+    );
     center.appendChild(totalRow);
     var savingsRow = document.createElement('div');
     savingsRow.className = 'cb-sticky-savings-row';
@@ -478,6 +505,7 @@
 
     _stickyEl = footer;
     _stickyBtn = btn;
+    _stickyTotalEl = totalRow;
     return btn;
   }
 
@@ -651,7 +679,10 @@
 
     var priceText = document.createElement('div');
     priceText.className = 'cb-box-price-text';
-    priceText.textContent = formatPrice(box.bundlePrice, ctx.currencySymbol);
+    priceText.textContent = formatPrice(
+      isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0),
+      ctx.currencySymbol
+    );
     body.appendChild(priceText);
 
     if (box.isGiftBox) {
@@ -931,18 +962,25 @@
       // Gift message visibility
       if (giftSection) giftSection.style.display = allFilled ? 'block' : 'none';
 
-      // Sticky savings row — dynamic MRP (updates with each product selection)
+      var hasSelected = false;
+      slots.forEach(function (p) {
+        if (p) hasSelected = true;
+      });
+      var totalMrp = getSelectedProductsTotal(slots);
+      var isDynamic = isDynamicBundlePrice(box);
+
+      if (_stickyTotalEl) {
+        renderStickyTotal(
+          _stickyTotalEl,
+          isDynamic ? totalMrp : (parseFloat(box.bundlePrice) || 0),
+          ctx.currencySymbol
+        );
+      }
+
       if (_stickySavingsEl) {
-        var totalMrp = 0;
-        var hasSelected = false;
-        slots.forEach(function (p) {
-          if (p) {
-            hasSelected = true;
-            totalMrp += (p.productPrice != null && parseFloat(p.productPrice) > 0)
-              ? parseFloat(p.productPrice) : 0;
-          }
-        });
-        if (hasSelected) {
+        if (isDynamic) {
+          _stickySavingsEl.style.display = 'none';
+        } else if (hasSelected) {
           var bundlePrice = parseFloat(box.bundlePrice);
           var savingsAmt = totalMrp - bundlePrice;
           var savingsBadge = (ctx.settings && ctx.settings.showSavingsBadge && savingsAmt > 0)
