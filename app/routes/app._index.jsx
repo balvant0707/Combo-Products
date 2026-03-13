@@ -169,7 +169,6 @@ function StatCard({ label, value, icon, accent, bg, sub }) {
 
 function ThemeCustomizationCard({
   onOpenThemeEditor,
-  onOpenSettings,
   themeEditorDisabled,
 }) {
   const steps = [
@@ -240,9 +239,8 @@ function ThemeCustomizationCard({
                 color: "#4b5563",
               }}
             >
-              The merchant should see where the app block is added, how it is
-              moved, and where the final Save action happens. This mirrors that
-              flow directly in the dashboard.
+              Follow the same add-block and drag-to-position flow shown in the
+              theme editor.
             </p>
           </div>
 
@@ -286,21 +284,6 @@ function ThemeCustomizationCard({
             ))}
           </div>
 
-          <div
-            style={{
-              background: "#f8fafc",
-              border: "1px solid #dbeafe",
-              borderRadius: "10px",
-              padding: "12px 14px",
-              color: "#334155",
-              fontSize: "13px",
-              lineHeight: 1.55,
-            }}
-          >
-            Tip: on product templates, place the widget inside Product
-            information. On home page templates, use Apps as a separate section.
-          </div>
-
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             <button
               type="button"
@@ -318,22 +301,6 @@ function ThemeCustomizationCard({
               }}
             >
               Open Theme Editor
-            </button>
-            <button
-              type="button"
-              onClick={onOpenSettings}
-              style={{
-                border: "1px solid #d1d5db",
-                borderRadius: "10px",
-                padding: "11px 16px",
-                background: "#fff",
-                color: "#111827",
-                fontSize: "13px",
-                fontWeight: "600",
-                cursor: "pointer",
-              }}
-            >
-              Widget Settings
             </button>
           </div>
         </div>
@@ -613,34 +580,7 @@ function ThemeCustomizationCard({
                         Rs. 320.00
                       </span>
                     </div>
-                    <div
-                      style={{
-                        padding: "14px 18px",
-                        borderRadius: "12px",
-                        background: "#f8fafc",
-                        border: "1px solid #dbeafe",
-                        fontSize: "13px",
-                        color: "#334155",
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      Add the block from Apps, then drag it above or below the
-                      product details until it is in the right position.
-                    </div>
                   </div>
-                </div>
-
-                <div
-                  style={{
-                    marginTop: "16px",
-                    paddingTop: "14px",
-                    borderTop: "1px solid #e5e7eb",
-                    fontSize: "12px",
-                    color: "#6b7280",
-                  }}
-                >
-                  Example flow: Product information &gt; Add block &gt; Apps
-                  &gt; Combo Builder &gt; Drag to reorder &gt; Save
                 </div>
               </div>
 
@@ -891,7 +831,6 @@ export default function DashboardPage() {
 
       <ThemeCustomizationCard
         onOpenThemeEditor={openThemeEditor}
-        onOpenSettings={() => navigateTo("/app/settings")}
         themeEditorDisabled={!themeEditorUrl}
       />
 
