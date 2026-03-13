@@ -187,28 +187,48 @@ function ThemeCustomizationCard({
   ];
 
   return (
-    <s-section heading="Theme Customization">
+    <s-section>
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1.02fr) minmax(360px, 0.98fr)",
-          gap: "20px",
-          alignItems: "stretch",
+          background: "#f5f5f4",
+          border: "1px solid #e7e5e4",
+          borderRadius: "22px",
+          padding: "20px",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
         }}
       >
         <div
           style={{
-            background: "#fff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "14px",
-            padding: "22px",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "16px",
+            fontSize: "32px",
+            fontWeight: "700",
+            color: "#3f3f46",
+            marginBottom: "18px",
           }}
         >
-          <div>
+          Theme Customization
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(280px, 0.86fr) minmax(0, 1.14fr)",
+            gap: "24px",
+            alignItems: "stretch",
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              border: "1px solid #d6d3d1",
+              borderRadius: "20px",
+              padding: "28px 24px",
+              boxShadow: "0 10px 28px rgba(15,23,42,0.08)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "18px",
+            }}
+          >
+            <div>
             <div
               style={{
                 fontSize: "12px",
@@ -291,13 +311,16 @@ function ThemeCustomizationCard({
               disabled={themeEditorDisabled}
               style={{
                 border: "none",
-                borderRadius: "10px",
-                padding: "11px 16px",
+                borderRadius: "14px",
+                padding: "14px 20px",
                 background: themeEditorDisabled ? "#9ca3af" : "#111827",
                 color: "#fff",
-                fontSize: "13px",
-                fontWeight: "700",
+                fontSize: "14px",
+                fontWeight: "800",
                 cursor: themeEditorDisabled ? "not-allowed" : "pointer",
+                boxShadow: themeEditorDisabled
+                  ? "none"
+                  : "0 10px 22px rgba(17,24,39,0.16)",
               }}
             >
               Open Theme Editor
@@ -308,9 +331,9 @@ function ThemeCustomizationCard({
         <div
           style={{
             background: "#f8fafc",
-            border: "1px solid #dbeafe",
-            borderRadius: "14px",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+            border: "1px solid #d5e3f3",
+            borderRadius: "20px",
+            boxShadow: "0 10px 28px rgba(59,130,246,0.08)",
             overflow: "hidden",
           }}
         >
@@ -738,10 +761,11 @@ function ThemeCustomizationCard({
                   </button>
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+    </div>
     </s-section>
   );
 }
@@ -765,8 +789,9 @@ export default function DashboardPage() {
 
   function openThemeEditor() {
     if (!themeEditorUrl || typeof window === "undefined") return;
-    if (window.top) {
-      window.top.location.href = themeEditorUrl;
+    const popup = window.open(themeEditorUrl, "_blank", "noopener,noreferrer");
+    if (popup) {
+      popup.opener = null;
       return;
     }
     window.location.href = themeEditorUrl;
