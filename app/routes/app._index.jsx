@@ -148,8 +148,8 @@ function ThemeCustomizationCard({
 }) {
   const steps = [
     "Open Shopify Theme Editor from this dashboard.",
-    "Choose the page template where the Combo Builder should appear.",
-    "Use Add block or Add section, then select Combo Builder from Apps.",
+    "Shopify opens the Default product template for theme customization.",
+    "Combo Builder is inserted into the product section so you can place it correctly.",
     "Drag the block to the right position and click Save.",
   ];
   const productInfoBlocks = [
@@ -1101,7 +1101,7 @@ export default function DashboardPage() {
             },
             {
               step: "2",
-              text: "Open Theme Editor, then add the Combo Builder block from Apps.",
+              text: "Open Theme Editor to load the Default product template with the Combo Builder block ready to place.",
             },
             {
               step: "3",
