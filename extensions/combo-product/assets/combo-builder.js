@@ -1460,6 +1460,38 @@
     }
   }
 
+  function waitForComboCartPresentation(expectedItemsCount) {
+    return new Promise(function (resolve) {
+      var attempts = 0;
+      var minimumVisibleItems = expectedItemsCount && expectedItemsCount > 0 ? expectedItemsCount : 1;
+
+      function check() {
+        cleanupComboCartPresentation(document);
+
+        var comboLine = document.querySelector('.cb-combo-line-item');
+        var visibleItemCount = 0;
+
+        if (comboLine) {
+          comboLine.querySelectorAll('li, p, dd, div, span').forEach(function (node) {
+            if (node.children && node.children.length > 0) return;
+            var text = (node.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+            if (/^item\s*\d+\s*:/.test(text)) visibleItemCount++;
+          });
+        }
+
+        attempts++;
+        if ((comboLine && visibleItemCount >= minimumVisibleItems) || attempts >= 12) {
+          resolve();
+          return;
+        }
+
+        setTimeout(check, 120);
+      }
+
+      setTimeout(check, 60);
+    });
+  }
+
   function isCartDrawerOpen() {
     var webComponentDrawer = document.querySelector('cart-drawer');
     if (webComponentDrawer) {
@@ -1530,8 +1562,32 @@
     var resolvedCurrencySymbol = currencySymbol || '\u20B9';
     var resolvedApiBase = String(apiBase || DEFAULT_API_BASE || '').replace(/\/+$/, '');
     var sectionIds = ['cart-drawer', 'cart-icon-bubble', 'cart-notification-button', 'cart-notification'];
+    var selectedItemsCount = slots.filter(Boolean).length;
+
+    function setBtnContent(btn, state, text) {
+      if (!btn) return;
+      btn.innerHTML = '';
+
+      if (state === 'loading') {
+        var spinner = document.createElement('span');
+        spinner.className = 'cb-btn-spinner';
+        spinner.setAttribute('aria-hidden', 'true');
+        btn.appendChild(spinner);
+      }
+
+      var label = document.createElement('span');
+      label.className = 'cb-btn-label';
+      label.textContent = text;
+      btn.appendChild(label);
+    }
 
     function setBtns(state, text) {
+      var displayText = state === 'loading'
+        ? 'Adding...'
+        : state === 'success'
+          ? 'Added to Cart!'
+          : text;
+
       [inlineBtn, stickyBtn].forEach(function (btn) {
         if (!btn) return;
         btn.disabled = state !== 'ready';
@@ -1546,7 +1602,7 @@
         } else if (state === 'ready') {
           btn.classList.add(btn === stickyBtn ? 'cb-sticky-btn--ready' : 'cb-inline-cart-btn--ready');
         }
-        btn.textContent = text;
+        setBtnContent(btn, state, displayText);
       });
     }
 
@@ -1891,7 +1947,15 @@
         document.dispatchEvent(new CustomEvent('cart:updated', { bubbles: true }));
 
         var opened = tryOpenThemeCartDrawer();
-        if (!opened) setTimeout(function () { window.location.href = '/cart'; }, 1200);
+        if (!opened) {
+          setTimeout(function () { window.location.href = '/cart'; }, 1200);
+          return;
+        }
+
+        setBtns('loading', 'Adding...');
+        return waitForComboCartPresentation(selectedItemsCount).then(function () {
+          setBtns('success', 'Added to Cart! âœ“');
+        });
       })
       .catch(function (err) {
         console.error('[ComboBuilder] Add to cart error:', err);

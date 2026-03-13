@@ -474,6 +474,10 @@
 
 /* Inline ADD TO CART in slot row — centered on 84px box */
 .cb-inline-cart-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   padding: 10px 32px;
   border-radius: 8px;
   border: none;
@@ -956,6 +960,10 @@
 }
 
 .cb-sticky-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   padding: 13px 30px;
   border: none;
   border-radius: var(--cb-radius-sm);
@@ -970,6 +978,20 @@
   white-space: nowrap;
   flex-shrink: 0;
   font-family: var(--cb-font);
+}
+
+.cb-btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: cb-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.cb-btn-label {
+  line-height: 1;
 }
 
 .cb-sticky-btn--ready {
