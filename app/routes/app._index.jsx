@@ -177,15 +177,6 @@ function ThemeCustomizationCard({
     "Use Add block or Add section, then select Combo Builder from Apps.",
     "Drag the block to the right position and click Save.",
   ];
-  const productInfoBlocks = [
-    "Text",
-    "Title",
-    "Price",
-    "Variant picker",
-    "Buy buttons",
-    "Combo Builder",
-  ];
-
   return (
     <s-section>
       <div
@@ -210,10 +201,7 @@ function ThemeCustomizationCard({
 
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(280px, 0.86fr) minmax(0, 1.14fr)",
-            gap: "24px",
-            alignItems: "stretch",
+            maxWidth: "360px",
           }}
         >
           <div
@@ -229,543 +217,106 @@ function ThemeCustomizationCard({
             }}
           >
             <div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: "700",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "#0f766e",
-                marginBottom: "8px",
-              }}
-            >
-              Guided Setup
-            </div>
-            <h3
-              style={{
-                margin: "0 0 8px",
-                fontSize: "24px",
-                lineHeight: 1.15,
-                color: "#111827",
-              }}
-            >
-              Theme customization instructions
-            </h3>
-            <p
-              style={{
-                margin: 0,
-                fontSize: "14px",
-                lineHeight: 1.6,
-                color: "#4b5563",
-              }}
-            >
-              Follow the same add-block and drag-to-position flow shown in the
-              theme editor.
-            </p>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {steps.map((step, index) => (
-              <div
-                key={step}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "28px minmax(0, 1fr)",
-                  gap: "12px",
-                  alignItems: "start",
-                }}
-              >
-                <div
-                  style={{
-                    width: "28px",
-                    height: "28px",
-                    borderRadius: "999px",
-                    background: "#0f766e",
-                    color: "#fff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "12px",
-                    fontWeight: "700",
-                  }}
-                >
-                  {index + 1}
-                </div>
-                <div
-                  style={{
-                    fontSize: "14px",
-                    lineHeight: 1.55,
-                    color: "#374151",
-                  }}
-                >
-                  {step}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={onOpenThemeEditor}
-              disabled={themeEditorDisabled}
-              style={{
-                border: "none",
-                borderRadius: "14px",
-                padding: "14px 20px",
-                background: themeEditorDisabled ? "#9ca3af" : "#111827",
-                color: "#fff",
-                fontSize: "14px",
-                fontWeight: "800",
-                cursor: themeEditorDisabled ? "not-allowed" : "pointer",
-                boxShadow: themeEditorDisabled
-                  ? "none"
-                  : "0 10px 22px rgba(17,24,39,0.16)",
-              }}
-            >
-              Open Theme Editor
-            </button>
-          </div>
-        </div>
-
-        <div
-          style={{
-            background: "#f8fafc",
-            border: "1px solid #d5e3f3",
-            borderRadius: "20px",
-            boxShadow: "0 10px 28px rgba(59,130,246,0.08)",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              height: "40px",
-              background: "#f3f4f6",
-              borderBottom: "1px solid #e5e7eb",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "0 14px",
-            }}
-          >
-            <div style={{ display: "flex", gap: "6px" }}>
-              {["#f87171", "#fbbf24", "#34d399"].map((color) => (
-                <span
-                  key={color}
-                  style={{
-                    width: "10px",
-                    height: "10px",
-                    borderRadius: "999px",
-                    background: color,
-                    display: "inline-block",
-                  }}
-                />
-              ))}
-            </div>
-            <div style={{ fontSize: "12px", color: "#6b7280", fontWeight: "600" }}>
-              Shopify Theme Editor
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "220px minmax(0, 1fr)",
-              minHeight: "430px",
-            }}
-          >
-            <div
-              style={{
-                background: "#fff",
-                borderRight: "1px solid #e5e7eb",
-                padding: "16px 14px",
-              }}
-            >
               <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: "12px",
-                }}
-              >
-                <div style={{ fontSize: "12px", fontWeight: "700", color: "#111827" }}>
-                  Default product
-                </div>
-                <div style={{ fontSize: "11px", fontWeight: "700", color: "#2563eb" }}>
-                  Change
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: "#f8fafc",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "10px",
-                  padding: "10px 12px",
-                  marginBottom: "14px",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "10px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: "#6b7280",
-                    fontWeight: "700",
-                    marginBottom: "6px",
-                  }}
-                >
-                  Preview
-                </div>
-                <div style={{ fontSize: "13px", color: "#374151", fontWeight: "600" }}>
-                  Small Convertible Flex Bag
-                </div>
-              </div>
-
-              <div
-                style={{
-                  fontSize: "10px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  color: "#6b7280",
+                  fontSize: "12px",
                   fontWeight: "700",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "#0f766e",
                   marginBottom: "8px",
                 }}
               >
-                Template
+                Guided Setup
               </div>
-              <div
+              <h3
                 style={{
-                  padding: "9px 10px",
-                  borderRadius: "8px 8px 0 0",
-                  background: "#f8fafc",
-                  border: "1px solid #e5e7eb",
-                  borderBottom: "none",
-                  fontSize: "12px",
-                  fontWeight: "700",
-                  color: "#374151",
+                  margin: "0 0 8px",
+                  fontSize: "24px",
+                  lineHeight: 1.15,
+                  color: "#111827",
                 }}
               >
-                Product information
-              </div>
-              <div
+                Theme customization instructions
+              </h3>
+              <p
                 style={{
-                  border: "1px solid #e5e7eb",
-                  borderTop: "none",
-                  borderRadius: "0 0 8px 8px",
-                  padding: "8px",
-                  background: "#fff",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
+                  margin: 0,
+                  fontSize: "14px",
+                  lineHeight: 1.6,
+                  color: "#4b5563",
                 }}
               >
-                {productInfoBlocks.map((item) => {
-                  const isActive = item === "Combo Builder";
-                  return (
-                    <div
-                      key={item}
-                      style={{
-                        padding: "8px 10px",
-                        borderRadius: "7px",
-                        background: isActive ? "#e0f2fe" : "#f9fafb",
-                        border: `1px solid ${isActive ? "#7dd3fc" : "#e5e7eb"}`,
-                        fontSize: "12px",
-                        fontWeight: isActive ? "700" : "600",
-                        color: isActive ? "#0f766e" : "#4b5563",
-                      }}
-                    >
-                      {item}
-                    </div>
-                  );
-                })}
-                <div
-                  style={{
-                    padding: "8px 10px",
-                    borderRadius: "7px",
-                    background: "#eff6ff",
-                    border: "1px solid #bfdbfe",
-                    fontSize: "12px",
-                    fontWeight: "700",
-                    color: "#2563eb",
-                  }}
-                >
-                  Add block
-                </div>
-              </div>
+                Follow the same add-block and drag-to-position flow shown in the
+                theme editor.
+              </p>
             </div>
 
-            <div
-              style={{
-                position: "relative",
-                padding: "20px",
-                background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-              }}
-            >
-              <div
-                style={{
-                  background: "#fff",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "14px",
-                  padding: "18px",
-                }}
-              >
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {steps.map((step, index) => (
                 <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: "18px",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                      color: "#6b7280",
-                    }}
-                  >
-                    Product page preview
-                  </div>
-                  <div
-                    style={{
-                      padding: "7px 10px",
-                      borderRadius: "999px",
-                      background: "#dbeafe",
-                      color: "#1d4ed8",
-                      fontSize: "11px",
-                      fontWeight: "700",
-                    }}
-                  >
-                    App block selected
-                  </div>
-                </div>
-
-                <div
+                  key={step}
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "minmax(180px, 0.85fr) minmax(0, 1.15fr)",
-                    gap: "20px",
+                    gridTemplateColumns: "28px minmax(0, 1fr)",
+                    gap: "12px",
                     alignItems: "start",
                   }}
                 >
                   <div
                     style={{
-                      height: "290px",
-                      borderRadius: "12px",
-                      background:
-                        "linear-gradient(180deg, rgba(232,211,192,0.92) 0%, rgba(191,136,98,0.96) 100%)",
-                      border: "1px solid #e5d4c6",
-                    }}
-                  />
-                  <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                    <div
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        alignSelf: "flex-start",
-                        padding: "6px 10px",
-                        borderRadius: "8px",
-                        border: "2px solid #60a5fa",
-                        background: "#eff6ff",
-                        color: "#1d4ed8",
-                        fontSize: "12px",
-                        fontWeight: "700",
-                      }}
-                    >
-                      Combo Builder
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "30px",
-                        fontWeight: "500",
-                        lineHeight: 1.1,
-                        color: "#111827",
-                      }}
-                    >
-                      Small Convertible Flex Bag
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                        fontSize: "15px",
-                        fontWeight: "600",
-                        color: "#6b7280",
-                      }}
-                    >
-                      <span style={{ textDecoration: "line-through" }}>Rs. 395.00</span>
-                      <span style={{ color: "#111827", textDecoration: "none" }}>
-                        Rs. 320.00
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  position: "absolute",
-                  left: "90px",
-                  top: "108px",
-                  width: "300px",
-                  background: "#fff",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "12px",
-                  boxShadow: "0 18px 40px rgba(15,23,42,0.16)",
-                  padding: "16px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: "12px",
-                    gap: "12px",
-                  }}
-                >
-                  <div
-                    style={{
+                      width: "28px",
+                      height: "28px",
+                      borderRadius: "999px",
+                      background: "#0f766e",
+                      color: "#fff",
                       display: "flex",
                       alignItems: "center",
-                      gap: "10px",
-                      fontSize: "14px",
+                      justifyContent: "center",
+                      fontSize: "12px",
                       fontWeight: "700",
+                    }}
+                  >
+                    {index + 1}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "14px",
+                      lineHeight: 1.55,
                       color: "#374151",
                     }}
                   >
-                    <span
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        borderRadius: "999px",
-                        background: "#16a34a",
-                        color: "#fff",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "12px",
-                        fontWeight: "800",
-                      }}
-                    >
-                      +
-                    </span>
-                    &quot;Combo Builder&quot; added
-                  </div>
-                  <span style={{ color: "#6b7280", fontSize: "18px", lineHeight: 1 }}>
-                    x
-                  </span>
-                </div>
-
-                <div
-                  style={{
-                    border: "1px solid #d1d5db",
-                    borderRadius: "8px",
-                    background: "#f8fafc",
-                    padding: "14px",
-                    marginBottom: "12px",
-                  }}
-                >
-                  <div
-                    style={{
-                      height: "72px",
-                      borderRadius: "8px",
-                      border: "2px dashed #93c5fd",
-                      background: "#fff",
-                      position: "relative",
-                    }}
-                  >
-                    <span
-                      style={{
-                        position: "absolute",
-                        left: "14px",
-                        top: "22px",
-                        width: "18px",
-                        height: "18px",
-                        borderRadius: "4px",
-                        background: "#60a5fa",
-                        display: "inline-block",
-                      }}
-                    />
-                    <span
-                      style={{
-                        position: "absolute",
-                        left: "42px",
-                        top: "26px",
-                        width: "92px",
-                        height: "10px",
-                        borderRadius: "999px",
-                        background: "#9ca3af",
-                        display: "inline-block",
-                      }}
-                    />
-                    <span
-                      style={{
-                        position: "absolute",
-                        right: "12px",
-                        top: "19px",
-                        width: "26px",
-                        height: "26px",
-                        borderRadius: "6px",
-                        border: "2px solid #60a5fa",
-                        color: "#2563eb",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "12px",
-                        fontWeight: "700",
-                      }}
-                    >
-                      ||
-                    </span>
+                    {step}
                   </div>
                 </div>
+              ))}
+            </div>
 
-                <div
-                  style={{
-                    fontSize: "13px",
-                    color: "#374151",
-                    lineHeight: 1.55,
-                  }}
-                >
-                  Drag the app block up or down to move it to the position you
-                  want. When ready, save your changes.
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    marginTop: "14px",
-                  }}
-                >
-                  <button
-                    type="button"
-                    style={{
-                      border: "none",
-                      borderRadius: "8px",
-                      background: "#16a34a",
-                      color: "#fff",
-                      fontSize: "13px",
-                      fontWeight: "700",
-                      padding: "9px 14px",
-                      cursor: "default",
-                    }}
-                  >
-                    Got it
-                  </button>
-                </div>
-              </div>
-              </div>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={onOpenThemeEditor}
+                disabled={themeEditorDisabled}
+                style={{
+                  border: "none",
+                  borderRadius: "14px",
+                  padding: "14px 20px",
+                  background: themeEditorDisabled ? "#9ca3af" : "#111827",
+                  color: "#fff",
+                  fontSize: "14px",
+                  fontWeight: "800",
+                  cursor: themeEditorDisabled ? "not-allowed" : "pointer",
+                  boxShadow: themeEditorDisabled
+                    ? "none"
+                    : "0 10px 22px rgba(17,24,39,0.16)",
+                }}
+              >
+                Open Theme Editor
+              </button>
             </div>
           </div>
         </div>
-    </div>
+      </div>
     </s-section>
   );
 }
