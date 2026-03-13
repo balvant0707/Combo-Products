@@ -39,6 +39,11 @@
       '/-</span>';
   }
 
+  function setBoxCardPrice(box, amount, currencySymbol) {
+    if (!box || !box._priceTextEl) return;
+    box._priceTextEl.textContent = formatPrice(amount || 0, currencySymbol);
+  }
+
   function resolveAddToCartLabel(settings) {
     var label = settings && settings.addToCartLabel != null
       ? String(settings.addToCartLabel).trim()
@@ -163,8 +168,9 @@
               id: String(v.id),
               title: v.title,
               available: v.available,
-              price: v.price != null ? parseFloat(v.price) : null,
-              compareAtPrice: v.compare_at_price != null ? parseFloat(v.compare_at_price) : null,
+              // Shopify product JSON returns variant prices in the smallest unit.
+              price: v.price != null ? (parseFloat(v.price) / 100) : null,
+              compareAtPrice: v.compare_at_price != null ? (parseFloat(v.compare_at_price) / 100) : null,
             };
           }),
         };
@@ -683,6 +689,7 @@
       isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0),
       ctx.currencySymbol
     );
+    box._priceTextEl = priceText;
     body.appendChild(priceText);
 
     if (box.isGiftBox) {
@@ -722,6 +729,10 @@
     if (!wrapper) return;
     var builderArea = wrapper.querySelector('.cb-builder-area');
     if (!builderArea) return;
+
+    if (isDynamicBundlePrice(box)) {
+      setBoxCardPrice(box, 0, ctx.currencySymbol);
+    }
 
     builderArea.style.display = 'block';
     builderArea.innerHTML = '<div class="cb-section-loading"><div class="combo-builder-spinner"></div> Loading products…</div>';
@@ -975,6 +986,10 @@
           isDynamic ? totalMrp : (parseFloat(box.bundlePrice) || 0),
           ctx.currencySymbol
         );
+      }
+
+      if (isDynamic) {
+        setBoxCardPrice(box, totalMrp, ctx.currencySymbol);
       }
 
       if (_stickySavingsEl) {
