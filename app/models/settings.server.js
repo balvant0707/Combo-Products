@@ -15,12 +15,18 @@ const DEFAULTS = {
   emailNotifications: false,
   presetTheme: "custom",
   widgetMaxWidth: 1140,
+  productCardsPerRow: 4,
 };
 
 export async function getSettings(shop) {
   const settings = await db.appSettings.findUnique({ where: { shop } });
   if (!settings) return { ...DEFAULTS, shop };
-  return settings;
+  return {
+    ...DEFAULTS,
+    ...settings,
+    widgetMaxWidth: parseWidgetMaxWidth(settings.widgetMaxWidth),
+    productCardsPerRow: parseProductCardsPerRow(settings.productCardsPerRow),
+  };
 }
 
 export async function upsertSettings(shop, data) {
@@ -38,7 +44,8 @@ export async function upsertSettings(shop, data) {
     analyticsTracking: parseBool(data.analyticsTracking, DEFAULTS.analyticsTracking),
     emailNotifications: parseBool(data.emailNotifications, DEFAULTS.emailNotifications),
     presetTheme: data.presetTheme ?? DEFAULTS.presetTheme,
-    widgetMaxWidth: data.widgetMaxWidth != null ? parseInt(data.widgetMaxWidth) || DEFAULTS.widgetMaxWidth : DEFAULTS.widgetMaxWidth,
+    widgetMaxWidth: parseWidgetMaxWidth(data.widgetMaxWidth),
+    productCardsPerRow: parseProductCardsPerRow(data.productCardsPerRow),
   };
 
   return db.appSettings.upsert({
@@ -52,4 +59,16 @@ function parseBool(val, fallback) {
   if (val === undefined || val === null) return fallback;
   if (typeof val === "boolean") return val;
   return val === "true" || val === "on" || val === "1";
+}
+
+function parseWidgetMaxWidth(value) {
+  if (value === undefined || value === null || value === "") return DEFAULTS.widgetMaxWidth;
+  const parsed = Number.parseInt(String(value), 10);
+  if (!Number.isFinite(parsed) || parsed < 0) return DEFAULTS.widgetMaxWidth;
+  return parsed;
+}
+
+function parseProductCardsPerRow(value) {
+  const parsed = Number.parseInt(String(value), 10);
+  return [3, 4, 5, 6].includes(parsed) ? parsed : DEFAULTS.productCardsPerRow;
 }

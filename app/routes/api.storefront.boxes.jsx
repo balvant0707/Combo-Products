@@ -56,6 +56,7 @@ export const loader = async ({ request }) => {
     showProductPrices: settings.showProductPrices,
     presetTheme: settings.presetTheme || "custom",
     widgetMaxWidth: settings.widgetMaxWidth ?? 1140,
+    productCardsPerRow: settings.productCardsPerRow ?? 4,
   };
 
   return Response.json({ boxes: publicBoxes, settings: publicSettings }, { headers: CORS_HEADERS });

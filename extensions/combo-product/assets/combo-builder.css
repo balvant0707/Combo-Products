@@ -402,6 +402,8 @@
 .cb-slot-step-label {
   text-align: center;
   line-height: 1.5;
+  font-size: 12px !important;
+  font-family: system-ui;
 }
 
 .cb-slot-step-small {

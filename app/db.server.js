@@ -200,12 +200,21 @@ CREATE TABLE IF NOT EXISTS \`app_settings\` (
   \`giftMessageField\` BOOLEAN NOT NULL DEFAULT false,
   \`analyticsTracking\` BOOLEAN NOT NULL DEFAULT true,
   \`emailNotifications\` BOOLEAN NOT NULL DEFAULT false,
+  \`presetTheme\` VARCHAR(50) NULL DEFAULT 'custom',
+  \`widgetMaxWidth\` INTEGER NULL DEFAULT 1140,
+  \`productCardsPerRow\` INTEGER NULL DEFAULT 4,
   \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   UNIQUE INDEX \`app_settings_shop_key\` (\`shop\`),
   PRIMARY KEY (\`id\`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 `;
+
+const ENSURE_APP_SETTINGS_COLUMNS_SQL = [
+  "ALTER TABLE `app_settings` ADD COLUMN IF NOT EXISTS `presetTheme` VARCHAR(50) NULL DEFAULT 'custom';",
+  "ALTER TABLE `app_settings` ADD COLUMN IF NOT EXISTS `widgetMaxWidth` INTEGER NULL DEFAULT 1140;",
+  "ALTER TABLE `app_settings` ADD COLUMN IF NOT EXISTS `productCardsPerRow` INTEGER NULL DEFAULT 4;",
+];
 
 let ensureTablesPromise;
 
@@ -218,6 +227,9 @@ export function ensureAppTables() {
       await prisma.$executeRawUnsafe(ENSURE_COMBO_BOX_PRODUCT_TABLE_SQL);
       await prisma.$executeRawUnsafe(ENSURE_BUNDLE_ORDER_TABLE_SQL);
       await prisma.$executeRawUnsafe(ENSURE_APP_SETTINGS_TABLE_SQL);
+      for (const sql of ENSURE_APP_SETTINGS_COLUMNS_SQL) {
+        await prisma.$executeRawUnsafe(sql);
+      }
     })();
   }
 

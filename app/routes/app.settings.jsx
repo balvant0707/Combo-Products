@@ -29,6 +29,7 @@ export const action = async ({ request }) => {
     emailNotifications: formData.get("emailNotifications"),
     presetTheme: formData.get("presetTheme"),
     widgetMaxWidth: formData.get("widgetMaxWidth"),
+    productCardsPerRow: formData.get("productCardsPerRow"),
   };
 
   await upsertSettings(session.shop, data);
@@ -57,6 +58,8 @@ const THEMES = [
   { id: "smooth-silk",       name: "Smooth Silk",       primary: "#f43f5e", bg: "#fff1f2", dark: false },
 ];
 
+const PRODUCT_CARD_ROW_OPTIONS = [3, 4, 5, 6];
+
 export default function SettingsPage() {
   const { settings } = useLoaderData();
   const actionData = useActionData();
@@ -66,6 +69,7 @@ export default function SettingsPage() {
   const [activeSlotColor, setActiveSlotColor] = useState(settings.activeSlotColor || "#2A7A4F");
   const [selectedTheme, setSelectedTheme] = useState(settings.presetTheme || "custom");
   const [widgetMaxWidth, setWidgetMaxWidth] = useState(settings.widgetMaxWidth ?? 1140);
+  const [productCardsPerRow, setProductCardsPerRow] = useState(settings.productCardsPerRow ?? 4);
 
   const inputStyle = {
     width: "100%",
@@ -381,6 +385,66 @@ export default function SettingsPage() {
         </div>
 
         {/* ── Widget Text Labels ───────────────────────────────────────────── */}
+        <s-section heading="Product Grid">
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
+              Controls how many product cards appear in each row on desktop storefront layouts.
+            </p>
+
+            <input type="hidden" name="productCardsPerRow" value={productCardsPerRow} />
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "12px" }}>
+              {PRODUCT_CARD_ROW_OPTIONS.map((count) => {
+                const isActive = productCardsPerRow === count;
+                return (
+                  <button
+                    key={count}
+                    type="button"
+                    onClick={() => setProductCardsPerRow(count)}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "10px",
+                      padding: "14px 10px",
+                      border: isActive ? "2px solid #2A7A4F" : "2px solid #e5e7eb",
+                      borderRadius: "10px",
+                      background: isActive ? "#f0fdf4" : "#fff",
+                      cursor: "pointer",
+                      boxShadow: isActive ? "0 0 0 3px rgba(42,122,79,0.12)" : "none",
+                      transition: "border-color 0.15s, background 0.15s",
+                    }}
+                  >
+                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${count}, 1fr)`, gap: "3px", width: "100%", maxWidth: "86px" }}>
+                      {Array.from({ length: count }).map((_, idx) => (
+                        <span
+                          key={idx}
+                          style={{
+                            display: "block",
+                            height: "16px",
+                            borderRadius: "4px",
+                            background: isActive ? "#2A7A4F" : "#d1d5db",
+                            opacity: isActive ? 1 : 0.85,
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: "12px", fontWeight: isActive ? "700" : "600", color: isActive ? "#065f46" : "#111827" }}>
+                        {count} per row
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
+                        Desktop layout
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </s-section>
+
         <s-section heading="Widget Settings">
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div>

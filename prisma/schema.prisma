@@ -136,6 +136,7 @@ model AppSettings {
   updatedAt          DateTime @updatedAt
   presetTheme        String?  @default("custom") @db.VarChar(50)
   widgetMaxWidth     Int?     @default(1140)
+  productCardsPerRow Int?     @default(4)
 
   @@map("app_settings")
 }

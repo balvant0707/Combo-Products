@@ -20,6 +20,11 @@
     return String((box && box.bundlePriceType) || 'manual') === 'dynamic';
   }
 
+  function normalizeProductCardsPerRow(value) {
+    var parsed = parseInt(value, 10);
+    return [3, 4, 5, 6].indexOf(parsed) !== -1 ? parsed : 4;
+  }
+
   function getSelectedProductsTotal(slots) {
     var total = 0;
     (slots || []).forEach(function (p) {
@@ -546,6 +551,10 @@
 
       var resolvedHeading = root.dataset.heading || config.heading || (settings && settings.widgetHeadingText) || 'Build Your Own Box!';
       if (settings && settings.presetTheme) applyPresetTheme(root, settings.presetTheme);
+      root.style.setProperty(
+        '--cb-products-per-row',
+        String(normalizeProductCardsPerRow(settings && settings.productCardsPerRow))
+      );
 
       // Apply dynamic max-width from admin settings
       if (settings && settings.widgetMaxWidth != null) {
